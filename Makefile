@@ -1,4 +1,9 @@
-.PHONY: install setup ingest dbt-seed dbt-run dbt-test dashboard all clean
+.PHONY: venv install setup ingest dbt-seed dbt-run dbt-test dashboard all clean
+
+venv:
+	python -m venv .venv
+	@echo "Activate with: source .venv/bin/activate  (macOS/Linux)"
+	@echo "           or: .venv\\Scripts\\Activate.ps1  (Windows PowerShell)"
 
 install:
 	pip install -r requirements.txt

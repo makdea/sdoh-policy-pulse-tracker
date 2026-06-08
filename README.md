@@ -46,7 +46,23 @@ dashboard/app.py  (Plotly Dash)
 - Python 3.11+
 - Git
 
-### 2. Install dependencies
+### 2. Create and activate a virtual environment
+
+```bash
+# Create
+python -m venv .venv
+
+# Activate — macOS/Linux
+source .venv/bin/activate
+
+# Activate — Windows (PowerShell)
+.venv\Scripts\Activate.ps1
+
+# Activate — Windows (cmd)
+.venv\Scripts\activate.bat
+```
+
+### 3. Install dependencies
 
 ```bash
 pip install -r requirements.txt
