@@ -11,21 +11,26 @@ models:
       - name: county_fips
         tests:
           - not_null
+
       - name: year
         tests:
           - not_null
+
       - name: pct_uninsured
         description: Percent uninsured (0–1). Null for suppressed small counties.
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
-              max_value: 1
-              row_condition: "pct_uninsured is not null"
+              arguments:
+                min_value: 0
+                max_value: 1
+                row_condition: "pct_uninsured is not null"
+
       - name: era_name
         tests:
           - not_null
           - accepted_values:
-              values: ['Trump1', 'Biden', 'Trump2']
+              arguments:
+                values: ['Trump1', 'Biden', 'Trump2']
 
   - name: mart_era_comparisons
     description: >
@@ -35,11 +40,13 @@ models:
       - name: era_name
         tests:
           - not_null
+
       - name: n_counties
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 1
-              max_value: 3200
+              arguments:
+                min_value: 1
+                max_value: 3200
 
   - name: mart_diff_in_diff
     description: >
@@ -51,11 +58,12 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values:
-                - pct_uninsured
-                - unemployment_rate
-                - poverty_rate
-                - median_household_income
+              arguments:
+                values:
+                  - pct_uninsured
+                  - unemployment_rate
+                  - poverty_rate
+                  - median_household_income
       - name: did_estimate
         tests:
           - not_null

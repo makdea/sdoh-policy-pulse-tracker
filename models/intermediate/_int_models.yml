@@ -10,6 +10,7 @@ models:
       - name: county_fips
         tests:
           - not_null
+
       - name: year
         tests:
           - not_null
@@ -25,7 +26,8 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['Trump1', 'Biden', 'Trump2']
+              arguments:
+                values: ['Trump1', 'Biden', 'Trump2']
 
   - name: int_medicaid_exposure
     description: >
@@ -36,12 +38,15 @@ models:
       - name: is_expansion_state
         tests:
           - not_null
+
       - name: expansion_phase
         tests:
           - not_null
+
           - accepted_values:
-              values:
-                - never_expanded
-                - pre_expansion
-                - expansion_year
-                - post_expansion
+              arguments:
+                values:
+                  - never_expanded
+                  - pre_expansion
+                  - expansion_year
+                  - post_expansion
