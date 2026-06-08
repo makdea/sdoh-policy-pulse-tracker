@@ -13,7 +13,7 @@ import duckdb
 from tqdm import tqdm
 from .config import DB_PATH, CENSUS_API_KEY, SAHIE_YEARS
 
-BASE_URL = "https://api.census.gov/data/{year}/healthins/sahie"
+BASE_URL = "https://api.census.gov/data/timeseries/healthins/sahie"
 
 # AGECAT=0 all ages, SEXCAT=0 both sexes, IPRCAT=0 all income levels
 FIXED_PARAMS = {"AGECAT": "0", "SEXCAT": "0", "IPRCAT": "0"}
@@ -24,12 +24,13 @@ def _fetch_year(year: int) -> pd.DataFrame:
         "get": "GEOID,NAME,PCTUI_PT,NUI_PT,NIC_PT",
         "for": "county:*",
         "in": "state:*",
+        "time": {year},
         **FIXED_PARAMS,
     }
     if CENSUS_API_KEY:
         params["key"] = CENSUS_API_KEY
 
-    resp = requests.get(BASE_URL.format(year=year), params=params, timeout=60)
+    resp = requests.get(BASE_URL, params=params, timeout=60)
     resp.raise_for_status()
 
     data = resp.json()
