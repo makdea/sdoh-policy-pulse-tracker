@@ -3,60 +3,174 @@ version: 2
 sources:
   - name: raw
     schema: raw
-    description: >
-      Raw tables loaded by the ingestion Python scripts. Each table is a
-      direct dump from an external data source with minimal transformation.
+    description: "Raw tables loaded by the ingestion Python scripts. Each table is a
+      direct dump from an external data source with minimal transformation."
     tables:
       - name: sahie_uninsured
-        description: >
-          Census SAHIE county-level uninsurance estimates, 2016–2022.
-          All-ages, both-sexes, all-income rows (AGECAT=0, SEXCAT=0, IPRCAT=0).
+        description: "Census SAHIE county-level uninsurance estimates, 2016–2022.
+          All-ages, both-sexes, all-income rows (AGECAT=0, SEXCAT=0, IPRCAT=0)."
         columns:
-          - name: GEOID
-            description: 5-digit county FIPS code
-          - name: NAME
-            description: County and state name
-          - name: PCTUI_PT
-            description: Percent uninsured (point estimate)
-          - name: NUI_PT
-            description: Number uninsured
-          - name: NIC_PT
-            description: Number insured
+          - name: geoid
+            data_type: varchar
+            description: ""
+          - name: name
+            data_type: varchar
+            description: ""
+          - name: pctui_pt
+            data_type: double
+            description: ""
+          - name: nui_pt
+            data_type: double
+            description: ""
+          - name: nic_pt
+            data_type: double
+            description: ""
+          - name: time
+            data_type: varchar
+            description: ""
+          - name: agecat
+            data_type: varchar
+            description: ""
+          - name: sexcat
+            data_type: varchar
+            description: ""
+          - name: iprcat
+            data_type: varchar
+            description: ""
+          - name: state
+            data_type: varchar
+            description: ""
+          - name: county
+            data_type: varchar
+            description: ""
           - name: year
+            data_type: bigint
+            description: ""
 
       - name: bls_laus
-        description: >
-          BLS LAUS annual-average county unemployment rates, 2016–2024.
-          Derived from la.data.64.County bulk file (measure code 04).
+        description: "BLS LAUS annual-average county unemployment rates, 2016–2024.
+          Derived from la.data.64.County bulk file (measure code 04)."
         columns:
           - name: county_fips
-            description: 5-digit county FIPS (state2 + county3)
+            data_type: varchar
+            description: "5-digit county FIPS (state2 + county3)"
           - name: state_fips
+            data_type: varchar
+            description: ""
+          - name: county_fips_within_state
+            data_type: varchar
+            description: ""
           - name: year
+            data_type: bigint
+            description: ""
           - name: unemployment_rate
-            description: Annual average unemployment rate (percent)
+            data_type: double
+            description: "Annual average unemployment rate (percent)"
 
       - name: acs_poverty
-        description: >
-          ACS 5-year estimates: poverty, income, education, housing burden.
-          2016–2022, county level.
+        description: "ACS 5-year estimates: poverty, income, education, housing burden.
+          2016–2022, county level."
         columns:
-          - name: county_fips
-          - name: state_fips
-          - name: year
+          - name: name
+            data_type: varchar
+            description: ""
           - name: median_household_income
+            data_type: double
+            description: ""
+          - name: n_below_poverty
+            data_type: double
+            description: ""
+          - name: poverty_universe
+            data_type: double
+            description: ""
+          - name: edu_universe
+            data_type: double
+            description: ""
+          - name: edu_hs_diploma
+            data_type: double
+            description: ""
+          - name: edu_bachelors
+            data_type: double
+            description: ""
+          - name: renters_total
+            data_type: double
+            description: ""
+          - name: renters_severe_burden
+            data_type: double
+            description: ""
+          - name: state
+            data_type: varchar
+            description: ""
+          - name: county
+            data_type: varchar
+            description: ""
+          - name: year
+            data_type: bigint
+            description: ""
+          - name: county_fips
+            data_type: varchar
+            description: ""
+          - name: state_fips
+            data_type: varchar
+            description: ""
           - name: poverty_rate
+            data_type: double
+            description: ""
           - name: pct_bachelors_plus
+            data_type: double
+            description: ""
+          - name: pct_hs_plus
+            data_type: double
+            description: ""
           - name: pct_severe_rent_burden
+            data_type: double
+            description: ""
 
-      - name: ahrq_sdoh
-        description: >
-          AHRQ SDOH database — healthcare infrastructure and broader SDOH
+      - name: ahrq_clh
+        description: "AHRQ CLH database — healthcare infrastructure and broader CLH
           variables not in ACS. 2016–2020, county level.
-          Requires manual download; pipeline proceeds without it.
+          Requires manual download; pipeline proceeds without it."
         columns:
           - name: county_fips
+            data_type: varchar
+            description: ""
           - name: year
+            data_type: bigint
+            description: ""
+          - name: pct_uninsured_under65
+            data_type: double
+            description: ""
+          - name: median_hh_income
+            data_type: double
+            description: ""
+          - name: pct_below_poverty
+            data_type: double
+            description: ""
+          - name: pct_unemployed
+            data_type: double
+            description: ""
+          - name: pct_hs_graduate
+            data_type: double
+            description: ""
+          - name: pct_bachelors
+            data_type: double
+            description: ""
+          - name: total_population
+            data_type: double
+            description: ""
           - name: dist_trauma_center_miles
-          - name: mds_per_10k
-          - name: rural_urban_code
+            data_type: double
+            description: ""
+          - name: mds_rate_per_100k
+            data_type: double
+            description: ""
+          - name: total_mds
+            data_type: double
+            description: ""
+          - name: rural_urban_code_2013
+            data_type: double
+            description: ""
+          - name: rural_urban_code_2023
+            data_type: double
+            description: ""
+
