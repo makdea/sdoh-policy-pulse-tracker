@@ -21,7 +21,7 @@ BLS_BASE = "https://download.bls.gov/pub/time.series/la"
 DATA_FILE = "la.data.64.County"
 SERIES_FILE = "la.series"
 
-HEADERS = {"User-Agent": "sdoh-policy-pulse-tracker/1.0 (research project)"}
+HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:151.0) Gecko/20100101 Firefox/151.0"}
 
 # Measure code 04 = unemployment rate (percent)
 UNEMPLOYMENT_RATE_CODE = "04"
@@ -52,14 +52,13 @@ def _parse_series(series_path: Path) -> pd.DataFrame:
     """Return mapping of series_id → state_fips, county_fips for unemployment rate."""
     series = pd.read_csv(
         series_path,
-        sep=r"\s+",
+        sep="\t",
+        engine="python",
         dtype=str,
-        usecols=["series_id", "area_type_code", "area_code", "measure_code"],
     )
-    series.columns = series.columns.str.strip()
-    series = series[series.columns.str.strip().isin(
-        ["series_id", "area_type_code", "area_code", "measure_code"]
-    )]
+    print("CSV read.")
+    series.columns = series.columns.str.strip()  # fix column names first
+    series = series[["series_id", "area_type_code", "area_code", "measure_code"]]
     series["series_id"] = series["series_id"].str.strip()
     series["area_type_code"] = series["area_type_code"].str.strip()
     series["measure_code"] = series["measure_code"].str.strip()
@@ -94,7 +93,8 @@ def ingest_bls_laus() -> None:
     chunks = []
     for chunk in pd.read_csv(
         data_path,
-        sep=r"\s+",
+        sep=r"\t",
+        engine="python",
         dtype=str,
         chunksize=200_000,
     ):
@@ -109,11 +109,14 @@ def ingest_bls_laus() -> None:
             & (chunk["period"] == ANNUAL_PERIOD)
             & (chunk["year"].astype(int).isin(BLS_YEARS))
         ]
+
         if not filtered.empty:
             chunks.append(filtered)
 
     data = pd.concat(chunks, ignore_index=True)
     data = data.merge(series_map, on="series_id", how="left")
+
+    print("Data merged.")
 
     data["year"] = data["year"].astype(int)
     data["unemployment_rate"] = pd.to_numeric(data["value"], errors="coerce")
