@@ -13,14 +13,14 @@ import time
 from .sahie import ingest_sahie
 from .bls_laus import ingest_bls_laus
 from .acs_poverty import ingest_acs_poverty
-from .ahrq_sdoh import ingest_ahrq_sdoh
+from .ahrq_clh import ingest_ahrq_clh
 
 
 STEPS = [
     ("sahie", "Census SAHIE uninsurance estimates", ingest_sahie),
     ("bls", "BLS LAUS county unemployment", ingest_bls_laus),
     ("acs", "ACS 5-year poverty / income / education", ingest_acs_poverty),
-    ("ahrq", "AHRQ SDOH infrastructure variables", ingest_ahrq_sdoh),
+    ("ahrq", "AHRQ SDOH infrastructure variables", ingest_ahrq_clh),
 ]
 
 
