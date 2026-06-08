@@ -1,0 +1,61 @@
+version: 2
+
+models:
+  - name: mart_county_sdoh_trends
+    description: >
+      Final wide table: one row per county per year (2016–2022).
+      Primary mart for the choropleth map and county drill-down dashboard panels.
+      Includes all SDOH dimensions, era labels, Medicaid exposure, and a composite
+      disadvantage index.
+    columns:
+      - name: county_fips
+        tests:
+          - not_null
+      - name: year
+        tests:
+          - not_null
+      - name: pct_uninsured
+        description: Percent uninsured (0–1). Null for suppressed small counties.
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 1
+              row_condition: "pct_uninsured is not null"
+      - name: era_name
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Trump1', 'Biden', 'Trump2']
+
+  - name: mart_era_comparisons
+    description: >
+      Era × expansion-status × census-region aggregate table.
+      Powers the era comparison bar chart and regional breakdown panels.
+    columns:
+      - name: era_name
+        tests:
+          - not_null
+      - name: n_counties
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 1
+              max_value: 3200
+
+  - name: mart_diff_in_diff
+    description: >
+      2×2 difference-in-differences estimates comparing expansion vs non-expansion
+      states across the Trump1→Biden era transition for four outcomes.
+      did_estimate < 0 on pct_uninsured means expansion states improved more.
+    columns:
+      - name: outcome
+        tests:
+          - not_null
+          - accepted_values:
+              values:
+                - pct_uninsured
+                - unemployment_rate
+                - poverty_rate
+                - median_household_income
+      - name: did_estimate
+        tests:
+          - not_null

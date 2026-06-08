@@ -1,0 +1,71 @@
+version: 2
+
+models:
+  - name: stg_sahie__uninsured
+    description: >
+      Cleaned SAHIE county-level uninsurance estimates (2016–2022).
+      Suppressed small-county values are retained as nulls.
+    columns:
+      - name: county_fips
+        description: 5-digit county FIPS code
+        tests:
+          - not_null
+      - name: state_fips
+        description: 2-digit state FIPS code
+        tests:
+          - not_null
+      - name: year
+        description: Estimate year
+        tests:
+          - not_null
+          - accepted_values:
+              values: [2016, 2017, 2018, 2019, 2020, 2021, 2022]
+      - name: pct_uninsured
+        description: >
+          Percent uninsured (0–1 scale). Null for suppressed small counties.
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 1
+              row_condition: "pct_uninsured is not null"
+
+  - name: stg_bls__unemployment
+    description: BLS LAUS annual average county unemployment rates (2016–2024).
+    columns:
+      - name: county_fips
+        tests:
+          - not_null
+      - name: year
+        tests:
+          - not_null
+      - name: unemployment_rate
+        description: Annual average unemployment rate (percent, 0–100 scale)
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 60
+
+  - name: stg_acs__poverty
+    description: ACS 5-year county poverty, income, education, and housing (2016–2022).
+    columns:
+      - name: county_fips
+        tests:
+          - not_null
+      - name: poverty_rate
+        description: Share of population below federal poverty line (0–1 scale)
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 1
+              row_condition: "poverty_rate is not null"
+
+  - name: stg_ahrq__sdoh
+    description: >
+      AHRQ SDOH healthcare infrastructure variables (2016–2020).
+      Returns an empty view when AHRQ Excel files have not been downloaded.
+    columns:
+      - name: county_fips
+        tests:
+          - not_null:
+              where: "county_fips is not null"

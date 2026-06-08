@@ -1,0 +1,52 @@
+state_fips,state_name,state_abbr,expansion_status,expansion_year
+01,Alabama,AL,not_expanded,
+02,Alaska,AK,expanded,2015
+04,Arizona,AZ,expanded,2014
+05,Arkansas,AR,expanded,2014
+06,California,CA,expanded,2014
+08,Colorado,CO,expanded,2014
+09,Connecticut,CT,expanded,2014
+10,Delaware,DE,expanded,2014
+11,District of Columbia,DC,expanded,2014
+12,Florida,FL,not_expanded,
+13,Georgia,GA,not_expanded,
+15,Hawaii,HI,expanded,2014
+16,Idaho,ID,expanded,2020
+17,Illinois,IL,expanded,2014
+18,Indiana,IN,expanded,2015
+19,Iowa,IA,expanded,2014
+20,Kansas,KS,not_expanded,
+21,Kentucky,KY,expanded,2014
+22,Louisiana,LA,expanded,2016
+23,Maine,ME,expanded,2019
+24,Maryland,MD,expanded,2014
+25,Massachusetts,MA,expanded,2014
+26,Michigan,MI,expanded,2014
+27,Minnesota,MN,expanded,2014
+28,Mississippi,MS,not_expanded,
+29,Missouri,MO,expanded,2021
+30,Montana,MT,expanded,2016
+31,Nebraska,NE,expanded,2020
+32,Nevada,NV,expanded,2014
+33,New Hampshire,NH,expanded,2014
+34,New Jersey,NJ,expanded,2014
+35,New Mexico,NM,expanded,2014
+36,New York,NY,expanded,2014
+37,North Carolina,NC,expanded,2023
+38,North Dakota,ND,expanded,2014
+39,Ohio,OH,expanded,2014
+40,Oklahoma,OK,expanded,2021
+41,Oregon,OR,expanded,2014
+42,Pennsylvania,PA,expanded,2015
+44,Rhode Island,RI,expanded,2014
+45,South Carolina,SC,not_expanded,
+46,South Dakota,SD,expanded,2023
+47,Tennessee,TN,not_expanded,
+48,Texas,TX,not_expanded,
+49,Utah,UT,expanded,2020
+50,Vermont,VT,expanded,2014
+51,Virginia,VA,expanded,2019
+53,Washington,WA,expanded,2014
+54,West Virginia,WV,expanded,2014
+55,Wisconsin,WI,not_expanded,
+56,Wyoming,WY,not_expanded,

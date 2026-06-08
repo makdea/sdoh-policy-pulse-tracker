@@ -1,0 +1,62 @@
+version: 2
+
+sources:
+  - name: raw
+    schema: raw
+    description: >
+      Raw tables loaded by the ingestion Python scripts. Each table is a
+      direct dump from an external data source with minimal transformation.
+    tables:
+      - name: sahie_uninsured
+        description: >
+          Census SAHIE county-level uninsurance estimates, 2016–2022.
+          All-ages, both-sexes, all-income rows (AGECAT=0, SEXCAT=0, IPRCAT=0).
+        columns:
+          - name: GEOID
+            description: 5-digit county FIPS code
+          - name: NAME
+            description: County and state name
+          - name: PCTUI_PT
+            description: Percent uninsured (point estimate)
+          - name: NUI_PT
+            description: Number uninsured
+          - name: NIC_PT
+            description: Number insured
+          - name: year
+
+      - name: bls_laus
+        description: >
+          BLS LAUS annual-average county unemployment rates, 2016–2024.
+          Derived from la.data.64.County bulk file (measure code 04).
+        columns:
+          - name: county_fips
+            description: 5-digit county FIPS (state2 + county3)
+          - name: state_fips
+          - name: year
+          - name: unemployment_rate
+            description: Annual average unemployment rate (percent)
+
+      - name: acs_poverty
+        description: >
+          ACS 5-year estimates: poverty, income, education, housing burden.
+          2016–2022, county level.
+        columns:
+          - name: county_fips
+          - name: state_fips
+          - name: year
+          - name: median_household_income
+          - name: poverty_rate
+          - name: pct_bachelors_plus
+          - name: pct_severe_rent_burden
+
+      - name: ahrq_sdoh
+        description: >
+          AHRQ SDOH database — healthcare infrastructure and broader SDOH
+          variables not in ACS. 2016–2020, county level.
+          Requires manual download; pipeline proceeds without it.
+        columns:
+          - name: county_fips
+          - name: year
+          - name: dist_trauma_center_miles
+          - name: mds_per_10k
+          - name: rural_urban_code

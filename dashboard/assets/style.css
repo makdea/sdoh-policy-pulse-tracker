@@ -1,0 +1,28 @@
+body {
+  background-color: #f8f9fa;
+  font-family: "Inter", system-ui, sans-serif;
+}
+
+.card {
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.card-header {
+  font-weight: 600;
+  font-size: 0.85rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #495057;
+  background-color: #f1f3f5;
+  border-bottom: 1px solid #dee2e6;
+  padding: 0.5rem 1rem;
+}
+
+.Select-control {
+  border-radius: 4px !important;
+}
+
+h2 {
+  font-weight: 700;
+  color: #212529;
+}
