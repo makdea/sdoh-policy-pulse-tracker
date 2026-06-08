@@ -1,7 +1,7 @@
 {{
     config(
         materialized='view',
-        description='AHRQ SDOH database — healthcare infrastructure variables.'
+        description='AHRQ CLH database — healthcare infrastructure variables.'
     )
 }}
 
@@ -40,18 +40,18 @@ with source as (
 
 cleaned as (
     select
-        lpad(cast(county_fips as varchar), 5, '0')  as county_fips,
-        cast(year as integer)                        as year,
-        cast(pct_uninsured_18_64    as double)       as ahrq_pct_uninsured_18_64,
-        cast(dist_trauma_center_miles as double)     as dist_trauma_center_miles,
-        cast(mds_per_10k            as double)       as mds_per_10k,
-        cast(rural_urban_code       as integer)      as rural_urban_code,
+        lpad(cast(county_fips as varchar), 5, '0')      as county_fips,
+        cast(year as integer)                           as year,
+        cast(pct_uninsured_under65    as double)        as pct_uninsured_under65,
+        cast(dist_trauma_center_miles as double)        as dist_trauma_center_miles,
+        cast(mds_rate_per_100k        as double)        as mds_rate_per_100k,
+        cast(rural_urban_code_2013    as integer)       as rural_urban_code_2013,
 
         -- Rural flag: RUCC 4–9 = non-metro (USDA classification)
         case
-            when cast(rural_urban_code as integer) >= 4 then true
-            when cast(rural_urban_code as integer) between 1 and 3 then false
-        end                                          as is_rural
+            when cast(rural_urban_code_2013 as integer) >= 4 then true
+            when cast(rural_urban_code_2013 as integer) between 1 and 3 then false
+        end                                             as is_rural
 
     from source
     where county_fips is not null

@@ -10,19 +10,19 @@
 -- LEFT JOINs preserve all SAHIE rows even when other sources lack data.
 
 with sahie as (
-    select * from {{ ref('stg_sahie__uninsured') }}
+    select * from {{ ref('stg_sahie__county_uninsured') }}
 ),
 
 bls as (
-    select * from {{ ref('stg_bls__unemployment') }}
+    select * from {{ ref('stg_bls__county_unemployment') }}
 ),
 
 acs as (
-    select * from {{ ref('stg_acs__poverty') }}
+    select * from {{ ref('stg_acs__county_poverty') }}
 ),
 
 ahrq as (
-    select * from {{ ref('stg_ahrq__clh') }}
+    select * from {{ ref('stg_ahrq__county_health') }}
 ),
 
 state_lookup as (

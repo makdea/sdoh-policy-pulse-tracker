@@ -1,7 +1,7 @@
 version: 2
 
 models:
-  - name: stg_sahie__uninsured
+  - name: stg_sahie__county_uninsured
     description: >
       Cleaned SAHIE county-level uninsurance estimates (2016–2022).
       Suppressed small-county values are retained as nulls.
@@ -34,7 +34,7 @@ models:
                 max_value: 1
                 row_condition: "pct_uninsured is not null"
 
-  - name: stg_bls__unemployment
+  - name: stg_bls__county_unemployment
     description: BLS LAUS annual average county unemployment rates (2016–2024).
     columns:
       - name: county_fips
@@ -54,7 +54,7 @@ models:
                 min_value: 0
                 max_value: 60
 
-  - name: stg_acs__poverty
+  - name: stg_acs__county_poverty
     description: ACS 5-year county poverty, income, education, and housing (2016–2022).
     columns:
       - name: county_fips
@@ -70,7 +70,7 @@ models:
                 max_value: 1
                 row_condition: "poverty_rate is not null"
 
-  - name: stg_ahrq__clh
+  - name: stg_ahrq__county_health
     description: >
       AHRQ SDOH healthcare infrastructure variables (2016–2020).
       Returns an empty view when AHRQ Excel files have not been downloaded.
