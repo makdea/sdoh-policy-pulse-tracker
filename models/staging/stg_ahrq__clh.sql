@@ -11,14 +11,14 @@
 
 {% set ahrq_exists %}
     select count(*) from information_schema.tables
-    where table_schema = 'raw' and table_name = 'ahrq_sdoh'
+    where table_schema = 'raw' and table_name = 'ahrq_clh'
 {% endset %}
 
 with source as (
     {% if execute %}
         {% set result = run_query(ahrq_exists) %}
         {% if result.columns[0].values()[0] > 0 %}
-            select * from {{ source('raw', 'ahrq_sdoh') }}
+            select * from {{ source('raw', 'ahrq_clh') }}
         {% else %}
             -- AHRQ files not yet loaded; return empty scaffold
             select
@@ -34,7 +34,7 @@ with source as (
             where 1 = 0
         {% endif %}
     {% else %}
-        select * from {{ source('raw', 'ahrq_sdoh') }}
+        select * from {{ source('raw', 'ahrq_clh') }}
     {% endif %}
 ),
 

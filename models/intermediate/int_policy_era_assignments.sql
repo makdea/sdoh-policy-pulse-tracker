@@ -10,7 +10,7 @@
 -- since the new administration takes office in January.
 
 with spine as (
-    select * from {{ ref('int_county_annual_sdoh') }}
+    select * from {{ ref('int_county_annual_clh') }}
 ),
 
 eras as (

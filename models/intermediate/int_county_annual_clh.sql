@@ -22,7 +22,7 @@ acs as (
 ),
 
 ahrq as (
-    select * from {{ ref('stg_ahrq__sdoh') }}
+    select * from {{ ref('stg_ahrq__clh') }}
 ),
 
 state_lookup as (
