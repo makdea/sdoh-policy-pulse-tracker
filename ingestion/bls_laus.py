@@ -24,7 +24,7 @@ SERIES_FILE = "la.series"
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:151.0) Gecko/20100101 Firefox/151.0"}
 
 # Measure code 04 = unemployment rate (percent)
-UNEMPLOYMENT_RATE_CODE = "04"
+UNEMPLOYMENT_RATE_CODE = "03"
 
 # M13 = annual average in BLS period codes
 ANNUAL_PERIOD = "M13"
