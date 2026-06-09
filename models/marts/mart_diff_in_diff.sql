@@ -1,3 +1,6 @@
+-- NOTE: I don't love this model. Leaving it out of the dash for now. Notes in
+-- comments on things to consider/change before using.
+
 {{
     config(
         materialized='table',
@@ -21,6 +24,12 @@ with base as (
     select * from {{ ref('int_medicaid_exposure') }}
     where era_name in ('Trump1', 'Biden')
       and pct_uninsured is not null
+      and unemployment_rate is not null
+      and poverty_rate is not null
+      and median_household_income is not null
+      -- Unclear how many rows we are dropping here - need to make sure it's
+      -- not too many and that there's not a systematic reason for nulls which would
+      -- bias the results
 ),
 
 -- Era × treatment cell averages
@@ -30,6 +39,7 @@ cell_avgs as (
         is_expansion_state,
         count(distinct county_fips)          as n_counties,
         count(*)                             as n_obs,
+        -- Taking the average of these rates weights every county the same regardles sof size/population :(
         avg(pct_uninsured)                   as avg_pct_uninsured,
         avg(unemployment_rate)               as avg_unemployment_rate,
         avg(poverty_rate)                    as avg_poverty_rate,
@@ -45,7 +55,7 @@ pivoted as (
         is_expansion_state,
         n_counties,
         n_obs,
-
+-- Takes just the max, so a single outlier can change the outcome a lot here
         max(case when era_name = 'Trump1' then avg_pct_uninsured    end) as trump1_pct_uninsured,
         max(case when era_name = 'Biden'  then avg_pct_uninsured    end) as biden_pct_uninsured,
 
