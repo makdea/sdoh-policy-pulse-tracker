@@ -37,4 +37,19 @@ cleaned as (
       and right(county_fips, 3) != '000'
 )
 
-select * from cleaned
+select 
+    {{ dbt_utils.generate_surrogate_key([
+        'county_fips',
+        'year'
+    ]) }} as county_year_key,
+    county_fips,
+    state_fips,
+    year,
+    median_household_income,
+    poverty_rate,
+    n_below_poverty,
+    poverty_universe,
+    pct_bachelors_plus,
+    pct_hs_plus,
+    pct_severe_rent_burden
+from cleaned

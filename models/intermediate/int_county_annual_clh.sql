@@ -71,10 +71,10 @@ joined as (
         ah.rural_urban_code,
         ah.is_rural
 
-    from sahie s
-    left join bls  b  on s.county_fips = b.county_fips  and s.year = b.year
-    left join acs  a  on s.county_fips = a.county_fips  and s.year = a.year
-    left join ahrq ah on s.county_fips = ah.county_fips and s.year = ah.year
+    from sahie
+    left join bls  on sahie.county_fips = bls.county_fips  and s.year = b.year
+    left join acs  on s.county_fips = a.county_fips  and s.year = a.year
+    left join ahrq on s.county_fips = ah.county_fips and s.year = ah.year
     left join state_lookup sl on s.state_fips = sl.state_fips
 )
 

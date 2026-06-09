@@ -14,8 +14,8 @@ cleaned as (
         -- SAHIE GEOID is the 5-digit county FIPS
         lpad(cast("GEOID" as varchar), 5, '0')              as county_fips,
         left(lpad(cast("GEOID" as varchar), 5, '0'), 2)     as state_fips,
-        "NAME"                                               as county_name,
-        cast(year as integer)                                as year,
+        "NAME"                                              as county_name,
+        cast(year as integer)                               as year,
 
         -- Core uninsurance metrics
         -- PCTUI_PT is suppressed (null) for small counties; preserve nulls.
@@ -25,8 +25,7 @@ cleaned as (
 
         -- Derived total population from insured + uninsured
         try_cast("NUI_PT" as double)
-            + try_cast("NIC_PT" as double)                   as pop_total_sahie
-
+            + try_cast("NIC_PT" as double)                   as sahie_total_population
     from source
     where "GEOID" is not null
       and cast(year as integer) between 2016 and 2022
@@ -34,4 +33,17 @@ cleaned as (
       and right(lpad(cast("GEOID" as varchar), 5, '0'), 3) != '000'
 )
 
-select * from cleaned
+select
+    {{ dbt_utils.generate_surrogate_key([
+        'county_fips',
+        'year'
+    ]) }} as county_year_key,
+    county_fips,
+    state_fips,
+    county_name,
+    year,
+    pct_uninsured,
+    n_uninsured,
+    n_insured,
+    sahie_total_population
+from cleaned

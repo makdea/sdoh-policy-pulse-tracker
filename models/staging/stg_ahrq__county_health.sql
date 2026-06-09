@@ -22,6 +22,7 @@ with source as (
         {% else %}
             -- AHRQ files not yet loaded; return empty scaffold
             select
+                cast(null as varchar)  as county_year_key,
                 cast(null as varchar)  as county_fips,
                 cast(null as integer)  as year,
                 cast(null as double)   as pct_uninsured_18_64,
@@ -57,4 +58,13 @@ cleaned as (
     where county_fips is not null
 )
 
-select * from cleaned
+select
+    {{ dbt_utils.generate_surrogate_key([
+        'county_fips',
+        'year'
+    ]) }} as county_year_key,
+    pct_uninsured_under65,
+    dist_trauma_center_miles,
+    mds_rate_per_100k,
+    rural_urban_code_2013
+from cleaned

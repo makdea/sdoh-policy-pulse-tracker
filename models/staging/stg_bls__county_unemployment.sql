@@ -13,8 +13,8 @@ cleaned as (
     select
         lpad(cast(county_fips as varchar), 5, '0')  as county_fips,
         lpad(cast(state_fips  as varchar), 2, '0')  as state_fips,
-        cast(year as integer)                        as year,
-        cast(unemployment_rate as double)            as unemployment_rate
+        cast(year as integer)                       as year,
+        cast(unemployment_rate as double)           as unemployment_rate
 
     from source
     where county_fips is not null
@@ -24,4 +24,13 @@ cleaned as (
       and right(lpad(cast(county_fips as varchar), 5, '0'), 3) != '000'
 )
 
-select * from cleaned
+select
+    {{ dbt_utils.generate_surrogate_key([
+        'county_fips',
+        'year'
+    ]) }} as county_year_key,
+    county_fips,
+    state_fips,
+    year,
+    unemployment_rate
+from cleaned
