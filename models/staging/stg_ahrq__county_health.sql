@@ -66,5 +66,6 @@ select
     pct_uninsured_under65,
     dist_trauma_center_miles,
     mds_rate_per_100k,
-    rural_urban_code_2013
+    rural_urban_code_2013,
+    is_rural
 from cleaned

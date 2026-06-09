@@ -40,17 +40,17 @@ policy_events as (
 
 assigned as (
     select
-        s.*,
-        e.era_name,
-        e.president,
-        e.color_hex as era_color_hex,
-        pe.policy_event_label
+        spine.*,
+        eras.era_name,
+        eras.president,
+        eras.color_hex as era_color_hex,
+        pol.policy_event_label
 
-    from spine s
-    left join eras e
-        on s.year between e.start_year and e.end_year
-    left join policy_events pe
-        on s.year = pe.year
+    from spine
+    left join eras
+        on spine.year between eras.start_year and eras.end_year
+    left join policy_events pol
+        on spine.year = pol.year
 )
 
 select * from assigned

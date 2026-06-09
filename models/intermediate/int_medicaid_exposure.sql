@@ -25,32 +25,32 @@ expansion as (
 
 joined as (
     select
-        e.*,
+        era_assigned.*,
 
         -- Expansion metadata
-        ex.expansion_status,
-        ex.expansion_year,
-        case when ex.expansion_status = 'expanded' then true else false end
+        expansion.expansion_status,
+        expansion.expansion_year,
+        case when expansion.expansion_status = 'expanded' then true else false end
             as is_expansion_state,
 
         -- Years since expansion at time of observation (0 in expansion year)
         -- Null for non-expansion states and pre-expansion years
         case
-            when ex.expansion_status = 'expanded'
-             and e.year >= ex.expansion_year
-            then e.year - ex.expansion_year
+            when expansion.expansion_status = 'expanded'
+             and era_assigned.year >= expansion.expansion_year
+            then era_assigned.year - expansion.expansion_year
         end as years_since_expansion,
 
         -- Pre/post expansion indicator (for DiD treatment variable)
         case
-            when ex.expansion_status = 'not_expanded' then 'never_expanded'
-            when e.year < ex.expansion_year            then 'pre_expansion'
-            when e.year = ex.expansion_year            then 'expansion_year'
+            when expansion.expansion_status = 'not_expanded' then 'never_expanded'
+            when era_assigned.year < expansion.expansion_year then 'pre_expansion'
+            when era_assigned.year = expansion.expansion_year then 'expansion_year'
             else                                            'post_expansion'
         end as expansion_phase
 
-    from era_assigned e
-    left join expansion ex using (state_fips)
+    from era_assigned
+    left join expansion using (state_fips)
 )
 
 select * from joined

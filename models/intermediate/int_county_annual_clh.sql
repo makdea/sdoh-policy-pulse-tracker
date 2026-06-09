@@ -25,7 +25,7 @@ ahrq as (
     select * from {{ ref('stg_ahrq__county_health') }}
 ),
 
-state_lookup as (
+states as (
     select
         state_fips,
         state_name,
@@ -37,45 +37,48 @@ state_lookup as (
 
 joined as (
     select
+        -- PK
+        sahie.county_year_key,
+
         -- Geography
-        s.county_fips,
-        s.state_fips,
-        s.county_name,
-        sl.state_name,
-        sl.state_abbr,
-        sl.census_region,
-        sl.census_division,
+        sahie.county_fips,
+        sahie.state_fips,
+        sahie.county_name,
+        states.state_name,
+        states.state_abbr,
+        states.census_region,
+        states.census_division,
 
         -- Time
-        s.year,
+        sahie.year,
 
         -- SAHIE uninsurance
-        s.pct_uninsured,
-        s.n_uninsured,
-        s.n_insured,
-        s.pop_total_sahie,
+        sahie.pct_uninsured,
+        sahie.n_uninsured,
+        sahie.n_insured,
+        sahie.sahie_total_population,
 
         -- BLS unemployment
-        b.unemployment_rate,
+        bls.unemployment_rate,
 
         -- ACS socioeconomic
-        a.median_household_income,
-        a.poverty_rate,
-        a.pct_bachelors_plus,
-        a.pct_hs_plus,
-        a.pct_severe_rent_burden,
+        acs.median_household_income,
+        acs.poverty_rate,
+        acs.pct_bachelors_plus,
+        acs.pct_hs_plus,
+        acs.pct_severe_rent_burden,
 
         -- AHRQ infrastructure (null when files not loaded)
-        ah.dist_trauma_center_miles,
-        ah.mds_per_10k,
-        ah.rural_urban_code,
-        ah.is_rural
+        ahrq.dist_trauma_center_miles,
+        ahrq.mds_rate_per_100k,
+        ahrq.rural_urban_code_2013,
+        ahrq.is_rural
 
     from sahie
-    left join bls  on sahie.county_fips = bls.county_fips  and s.year = b.year
-    left join acs  on s.county_fips = a.county_fips  and s.year = a.year
-    left join ahrq on s.county_fips = ah.county_fips and s.year = ah.year
-    left join state_lookup sl on s.state_fips = sl.state_fips
+    left join bls  on sahie.county_year_key = bls.county_year_key
+    left join acs  on sahie.county_year_key = acs.county_year_key
+    left join ahrq on sahie.county_year_key = ahrq.county_year_key
+    left join states on sahie.state_fips = states.state_fips
 )
 
 select * from joined
