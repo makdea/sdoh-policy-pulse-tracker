@@ -43,7 +43,7 @@ final as (
         pct_uninsured,
         n_uninsured,
         n_insured,
-        pop_total_sahie,
+        sahie_total_population,
 
         -- Economic context
         unemployment_rate,
@@ -59,9 +59,9 @@ final as (
 
         -- Healthcare infrastructure (null without AHRQ files)
         dist_trauma_center_miles,
-        mds_per_10k,
+        mds_rate_per_100k,
         is_rural,
-        rural_urban_code,
+        rural_urban_code_2013,
 
         -- Composite disadvantage index: mean z-score across three key indicators.
         -- Null when any component is null. Higher value = more disadvantaged.
