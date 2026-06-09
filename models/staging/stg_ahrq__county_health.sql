@@ -56,6 +56,7 @@ cleaned as (
 
     from source
     where county_fips is not null
+    and year::integer > 2016
 )
 
 select
@@ -63,6 +64,8 @@ select
         'county_fips',
         'year'
     ]) }} as county_year_key,
+    county_fips,
+    year,
     pct_uninsured_under65,
     dist_trauma_center_miles,
     mds_rate_per_100k,

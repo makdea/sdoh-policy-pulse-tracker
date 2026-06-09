@@ -19,7 +19,7 @@ cleaned as (
     from source
     where county_fips is not null
       and unemployment_rate is not null
-      and cast(year as integer) between 2016 and 2024
+      and cast(year as integer) between 2017 and 2024
       -- Drop state-level rows (county portion is '000')
       and right(lpad(cast(county_fips as varchar), 5, '0'), 3) != '000'
 )

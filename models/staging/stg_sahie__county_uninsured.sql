@@ -28,7 +28,7 @@ cleaned as (
             + try_cast("NIC_PT" as double)                   as sahie_total_population
     from source
     where "GEOID" is not null
-      and cast(year as integer) between 2016 and 2022
+      and cast(year as integer) between 2017 and 2022
       -- Exclude state-level aggregate rows (FIPS ends in '000')
       and right(lpad(cast("GEOID" as varchar), 5, '0'), 3) != '000'
 )

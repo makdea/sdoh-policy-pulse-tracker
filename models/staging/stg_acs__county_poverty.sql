@@ -33,7 +33,7 @@ cleaned as (
 
     from source
     where county_fips is not null
-      and cast(year as integer) between 2016 and 2022
+      and cast(year as integer) between 2017 and 2022
       and right(county_fips, 3) != '000'
 )
 
