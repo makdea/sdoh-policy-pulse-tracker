@@ -9,9 +9,9 @@ API docs: https://www.census.gov/data/developers/data-sets/Health-Insurance-Stat
 
 import requests
 import pandas as pd
-import duckdb
 from tqdm import tqdm
-from .config import DB_PATH, CENSUS_API_KEY, SAHIE_YEARS
+from .config import CENSUS_API_KEY, SAHIE_YEARS
+from .warehouse import write_raw_table
 
 BASE_URL = "https://api.census.gov/data/timeseries/healthins/sahie"
 
@@ -60,11 +60,9 @@ def ingest_sahie() -> None:
     # GEOID from SAHIE is 5-char county FIPS
     df["GEOID"] = df["GEOID"].str.zfill(5)
 
-    conn = duckdb.connect(DB_PATH)
-    conn.execute("CREATE SCHEMA IF NOT EXISTS raw")
-    conn.execute("DROP TABLE IF EXISTS raw.sahie_uninsured")
-    conn.execute("CREATE TABLE raw.sahie_uninsured AS SELECT * FROM df")
-    row_count = conn.execute("SELECT COUNT(*) FROM raw.sahie_uninsured").fetchone()[0]
-    conn.close()
+    # BigQuery column identifiers are case-insensitive but the staging model
+    # references them lower-case for clarity — normalize here.
+    df.columns = df.columns.str.lower()
 
+    row_count = write_raw_table(df, "sahie_uninsured")
     print(f"raw.sahie_uninsured: {row_count:,} rows loaded")

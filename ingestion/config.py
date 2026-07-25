@@ -3,7 +3,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DB_PATH = os.environ.get("DUCKDB_PATH", "data/sdoh_pulse.duckdb")
+GCP_PROJECT = os.environ.get("GCP_PROJECT", "")
+GCP_KEYFILE_PATH = os.environ.get("GCP_KEYFILE_PATH", "")
+GCP_LOCATION = os.environ.get("GCP_LOCATION", "US")
 CENSUS_API_KEY = os.environ.get("CENSUS_API_KEY", "")
 RAW_DIR = "data/raw"
 

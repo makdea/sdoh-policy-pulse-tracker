@@ -10,12 +10,12 @@ Bulk files: https://download.bls.gov/pub/time.series/la/
 import io
 from pathlib import Path
 
-import duckdb
 import pandas as pd
 import requests
 from tqdm import tqdm
 
-from .config import DB_PATH, RAW_DIR, BLS_YEARS
+from .config import RAW_DIR, BLS_YEARS
+from .warehouse import write_raw_table
 
 BLS_BASE = "https://download.bls.gov/pub/time.series/la"
 DATA_FILE = "la.data.64.County"
@@ -122,22 +122,9 @@ def ingest_bls_laus() -> None:
     data["unemployment_rate"] = pd.to_numeric(data["value"], errors="coerce")
     data = data[data["unemployment_rate"].notna()]
 
-    conn = duckdb.connect(DB_PATH)
-    conn.execute("CREATE SCHEMA IF NOT EXISTS raw")
-    conn.execute("DROP TABLE IF EXISTS raw.bls_laus")
-    conn.execute(
-        """
-        CREATE TABLE raw.bls_laus AS
-        SELECT
-            county_fips_full AS county_fips,
-            state_fips,
-            county_fips AS county_fips_within_state,
-            year,
-            unemployment_rate
-        FROM data
-        """
-    )
-    row_count = conn.execute("SELECT COUNT(*) FROM raw.bls_laus").fetchone()[0]
-    conn.close()
+    out = data.rename(
+        columns={"county_fips_full": "county_fips", "county_fips": "county_fips_within_state"}
+    )[["county_fips", "state_fips", "county_fips_within_state", "year", "unemployment_rate"]]
 
+    row_count = write_raw_table(out, "bls_laus")
     print(f"raw.bls_laus: {row_count:,} rows loaded")

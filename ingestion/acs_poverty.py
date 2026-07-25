@@ -17,9 +17,9 @@ API docs: https://www.census.gov/data/developers/data-sets/acs-5year.html
 
 import requests
 import pandas as pd
-import duckdb
 from tqdm import tqdm
-from .config import DB_PATH, CENSUS_API_KEY, ACS_YEARS
+from .config import CENSUS_API_KEY, ACS_YEARS
+from .warehouse import write_raw_table
 
 BASE_URL = "https://api.census.gov/data/{year}/acs/acs5"
 
@@ -102,11 +102,5 @@ def ingest_acs_poverty() -> None:
         df["renters_severe_burden"] / df["renters_total"]
     )
 
-    conn = duckdb.connect(DB_PATH)
-    conn.execute("CREATE SCHEMA IF NOT EXISTS raw")
-    conn.execute("DROP TABLE IF EXISTS raw.acs_poverty")
-    conn.execute("CREATE TABLE raw.acs_poverty AS SELECT * FROM df")
-    row_count = conn.execute("SELECT COUNT(*) FROM raw.acs_poverty").fetchone()[0]
-    conn.close()
-
+    row_count = write_raw_table(df, "acs_poverty")
     print(f"raw.acs_poverty: {row_count:,} rows loaded")

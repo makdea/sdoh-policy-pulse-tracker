@@ -18,10 +18,10 @@ Documentation: CLH-Data-Sources-Documentation-2025.pdf
 """
 
 from pathlib import Path
-import duckdb
 import pandas as pd
 from tqdm import tqdm
-from .config import DB_PATH, RAW_DIR
+from .config import RAW_DIR
+from .warehouse import write_raw_table
 
 AHRQ_DIR = Path(RAW_DIR) / "ahrq"
 
@@ -146,11 +146,5 @@ def ingest_ahrq_clh() -> None:
 
     combined = pd.concat(frames, ignore_index=True)
 
-    conn = duckdb.connect(DB_PATH)
-    conn.execute("CREATE SCHEMA IF NOT EXISTS raw")
-    conn.execute("DROP TABLE IF EXISTS raw.ahrq_clh")
-    conn.execute("CREATE TABLE raw.ahrq_clh AS SELECT * FROM combined")
-    row_count = conn.execute("SELECT COUNT(*) FROM raw.ahrq_clh").fetchone()[0]
-    conn.close()
-
+    row_count = write_raw_table(combined, "ahrq_clh")
     print(f"raw.ahrq_clh: {row_count:,} rows loaded")
