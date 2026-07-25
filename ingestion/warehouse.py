@@ -4,12 +4,16 @@ Shared BigQuery load helper for the ingestion scripts.
 Each ingestion script builds a pandas DataFrame and hands it to
 write_raw_table(), which replaces the table's contents in the `raw` dataset —
 equivalent to the old DuckDB DROP TABLE + CREATE TABLE AS pattern.
+
+Auth: this org blocks service-account key creation
+(iam.disableServiceAccountKeyCreation), so there's no keyfile. The client
+picks up Application Default Credentials instead — run
+`gcloud auth application-default login` once before running ingestion.
 """
 
 from google.cloud import bigquery
-from google.oauth2 import service_account
 
-from .config import GCP_PROJECT, GCP_KEYFILE_PATH, GCP_LOCATION
+from .config import GCP_PROJECT, GCP_LOCATION
 
 import pandas as pd
 
@@ -21,12 +25,7 @@ _client = None
 def _get_client() -> bigquery.Client:
     global _client
     if _client is None:
-        credentials = service_account.Credentials.from_service_account_file(
-            GCP_KEYFILE_PATH
-        )
-        _client = bigquery.Client(
-            project=GCP_PROJECT, credentials=credentials, location=GCP_LOCATION
-        )
+        _client = bigquery.Client(project=GCP_PROJECT, location=GCP_LOCATION)
         _client.create_dataset(
             bigquery.Dataset(f"{GCP_PROJECT}.{RAW_DATASET}"), exists_ok=True
         )

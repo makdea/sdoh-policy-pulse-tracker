@@ -3,8 +3,11 @@ sdoh_pulse:
   outputs:
     dev:
       type: bigquery
-      method: service-account
-      keyfile: "{{ env_var('GCP_KEYFILE_PATH') }}"
+      # No service-account keyfile: this org's policy blocks key creation
+      # (iam.disableServiceAccountKeyCreation). oauth uses your own gcloud
+      # Application Default Credentials instead — run
+      # `gcloud auth application-default login` once before `dbt` commands.
+      method: oauth
       project: "{{ env_var('GCP_PROJECT') }}"
       dataset: main
       location: "{{ env_var('GCP_LOCATION', 'US') }}"
