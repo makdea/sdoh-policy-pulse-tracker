@@ -8,169 +8,204 @@ sources:
     tables:
       - name: sahie_uninsured
         description: "Census SAHIE county-level uninsurance estimates, 2016–2022.
-          All-ages, both-sexes, all-income rows (AGECAT=0, SEXCAT=0, IPRCAT=0)."
+          All-ages, both-sexes, all-income rows (AGECAT=0, SEXCAT=0, IPRCAT=0).
+          Cleaned by stg_sahie__county_uninsured."
         columns:
           - name: geoid
             data_type: varchar
-            description: ""
+            description: "5-digit county FIPS code, the join key across all sources
+              once cleaned (zero-padded county_fips)."
           - name: name
             data_type: varchar
-            description: ""
+            description: "County name as published by SAHIE, e.g. 'Autauga County, Alabama'."
           - name: pctui_pt
             data_type: double
-            description: ""
+            description: "Percent of the population without health insurance
+              (0–100 scale, point estimate). Suppressed (null) for small counties."
           - name: nui_pt
             data_type: double
-            description: ""
+            description: "Estimated number of people without health insurance (point estimate)."
           - name: nic_pt
             data_type: double
-            description: ""
+            description: "Estimated number of people with health insurance (point estimate)."
           - name: time
             data_type: varchar
-            description: ""
+            description: "Raw SAHIE time period label as published by the Census API."
           - name: agecat
             data_type: varchar
-            description: ""
+            description: "Age category code. Filtered to '0' (all ages) during ingestion."
           - name: sexcat
             data_type: varchar
-            description: ""
+            description: "Sex category code. Filtered to '0' (both sexes) during ingestion."
           - name: iprcat
             data_type: varchar
-            description: ""
+            description: "Income-to-poverty-ratio category code. Filtered to '0'
+              (all income levels) during ingestion."
           - name: state
             data_type: varchar
-            description: ""
+            description: "2-digit state FIPS code as published by the Census API."
           - name: county
             data_type: varchar
-            description: ""
+            description: "3-digit county FIPS code (within-state portion) as published
+              by the Census API."
           - name: year
             data_type: bigint
-            description: ""
+            description: "Estimate year."
 
       - name: bls_laus
         description: "BLS LAUS annual-average county unemployment rates, 2016–2024.
-          Derived from la.data.64.County bulk file (measure code 04)."
+          Derived from la.data.64.County bulk file (measure code 04).
+          Cleaned by stg_bls__county_unemployment."
         columns:
           - name: county_fips
             data_type: varchar
-            description: "5-digit county FIPS (state2 + county3)"
+            description: "5-digit county FIPS (state2 + county3)."
           - name: state_fips
             data_type: varchar
-            description: ""
+            description: "2-digit state FIPS code."
           - name: county_fips_within_state
             data_type: varchar
-            description: ""
+            description: "3-digit county portion of the FIPS code, within the state."
           - name: year
             data_type: bigint
-            description: ""
+            description: "Calendar year of the annual-average estimate."
           - name: unemployment_rate
             data_type: double
-            description: "Annual average unemployment rate (percent)"
+            description: "Annual average unemployment rate (percent, 0–100 scale)."
 
       - name: acs_poverty
         description: "ACS 5-year estimates: poverty, income, education, housing burden.
-          2016–2022, county level."
+          2016–2022, county level. Cleaned by stg_acs__county_poverty."
         columns:
           - name: name
             data_type: varchar
-            description: ""
+            description: "County name as published by the Census ACS API."
           - name: median_household_income
             data_type: double
-            description: ""
+            description: "Median household income in dollars. Sentinel value
+              -666666666 indicates data not available."
           - name: n_below_poverty
             data_type: double
-            description: ""
+            description: "Estimated count of people with income below the poverty line."
           - name: poverty_universe
             data_type: double
-            description: ""
+            description: "Population universe for whom poverty status is determined
+              (denominator for poverty_rate)."
           - name: edu_universe
             data_type: double
-            description: ""
+            description: "Population universe for educational attainment estimates
+              (denominator for pct_hs_plus / pct_bachelors_plus)."
           - name: edu_hs_diploma
             data_type: double
-            description: ""
+            description: "Estimated count of adults with a high school diploma or
+              equivalent as their highest credential."
           - name: edu_bachelors
             data_type: double
-            description: ""
+            description: "Estimated count of adults with a bachelor's degree or higher."
           - name: renters_total
             data_type: double
-            description: ""
+            description: "Estimated total number of renter-occupied housing units
+              (denominator for pct_severe_rent_burden)."
           - name: renters_severe_burden
             data_type: double
-            description: ""
+            description: "Estimated number of renter households spending 50%+ of
+              income on rent."
           - name: state
             data_type: varchar
-            description: ""
+            description: "2-digit state FIPS code as published by the Census API."
           - name: county
             data_type: varchar
-            description: ""
+            description: "3-digit county FIPS code (within-state portion) as published
+              by the Census API."
           - name: year
             data_type: bigint
-            description: ""
+            description: "ACS 5-year estimate vintage year."
           - name: county_fips
             data_type: varchar
-            description: ""
+            description: "5-digit county FIPS code, concatenated from state + county."
           - name: state_fips
             data_type: varchar
-            description: ""
+            description: "2-digit state FIPS code, duplicate of `state` retained for
+              join convenience."
           - name: poverty_rate
             data_type: double
-            description: ""
+            description: "Pre-computed share of population below the federal poverty
+              line (0–1 scale), n_below_poverty / poverty_universe."
           - name: pct_bachelors_plus
             data_type: double
-            description: ""
+            description: "Pre-computed share of the adult population with a
+              bachelor's degree or higher (0–1 scale), edu_bachelors / edu_universe."
           - name: pct_hs_plus
             data_type: double
-            description: ""
+            description: "Pre-computed share of the adult population with a high
+              school diploma or higher (0–1 scale), edu_hs_diploma / edu_universe."
           - name: pct_severe_rent_burden
             data_type: double
-            description: ""
+            description: "Pre-computed share of renter households with severe rent
+              burden (0–1 scale), renters_severe_burden / renters_total."
 
       - name: ahrq_clh
         description: "AHRQ CLH database — healthcare infrastructure and broader CLH
           variables not in ACS. 2016–2020, county level.
-          Requires manual download; pipeline proceeds without it."
+          Requires manual download; pipeline proceeds without it.
+          Cleaned by stg_ahrq__county_health, which returns an empty
+          scaffold view when this table has not been loaded."
         columns:
           - name: county_fips
             data_type: varchar
-            description: ""
+            description: "5-digit county FIPS code."
           - name: year
             data_type: bigint
-            description: ""
+            description: "Year of the AHRQ CLH estimate."
           - name: pct_uninsured_under65
             data_type: double
-            description: ""
+            description: "Share of the under-65 population without health insurance
+              (0–1 scale)."
           - name: median_hh_income
             data_type: double
-            description: ""
+            description: "Median household income in dollars, as reported by AHRQ.
+              Not used downstream — ACS median_household_income is the
+              authoritative income figure in the marts."
           - name: pct_below_poverty
             data_type: double
-            description: ""
+            description: "Share of population below the federal poverty line
+              (0–1 scale), as reported by AHRQ. Not used downstream — ACS
+              poverty_rate is the authoritative poverty figure in the marts."
           - name: pct_unemployed
             data_type: double
-            description: ""
+            description: "Unemployment rate (0–1 scale), as reported by AHRQ. Not
+              used downstream — BLS unemployment_rate is the authoritative
+              figure in the marts."
           - name: pct_hs_graduate
             data_type: double
-            description: ""
+            description: "Share of adults who are high school graduates (0–1 scale),
+              as reported by AHRQ. Not currently used downstream."
           - name: pct_bachelors
             data_type: double
-            description: ""
+            description: "Share of adults with a bachelor's degree (0–1 scale), as
+              reported by AHRQ. Not currently used downstream."
           - name: total_population
             data_type: double
-            description: ""
+            description: "Total county population, as reported by AHRQ. Not
+              currently used downstream."
           - name: dist_trauma_center_miles
             data_type: double
-            description: ""
+            description: "Distance from the county centroid to the nearest trauma
+              center, in miles."
           - name: mds_rate_per_100k
             data_type: double
-            description: ""
+            description: "Rate of physicians (MDs) per 100,000 population."
           - name: total_mds
             data_type: double
-            description: ""
+            description: "Total count of physicians (MDs) in the county. Not
+              currently used downstream — mds_rate_per_100k is the
+              population-normalized figure used in the marts."
           - name: rural_urban_code_2013
             data_type: double
-            description: ""
+            description: "USDA 2013 Rural-Urban Continuum Code (RUCC). 1–3 = metro,
+              4–9 = non-metro."
           - name: rural_urban_code_2023
             data_type: double
-            description: ""
-
+            description: "USDA 2023 Rural-Urban Continuum Code (RUCC). Not currently
+              used downstream — rural_urban_code_2013 is used for
+              consistency with the study window."

@@ -1,0 +1,71 @@
+version: 2
+
+seeds:
+  - name: state_fips_lookup
+    description: >
+      Static lookup of US state FIPS codes to names, abbreviations, and
+      Census Bureau region/division. Joined onto the county-year spine in
+      int_county_annual_clh to add geography labels.
+    columns:
+      - name: state_fips
+        description: 2-digit state FIPS code.
+        data_tests:
+          - not_null
+          - unique
+      - name: state_name
+        description: Full state name.
+      - name: state_abbr
+        description: 2-letter state postal abbreviation.
+      - name: census_region
+        description: Census Bureau region (Northeast, Midwest, South, West).
+      - name: census_division
+        description: Census Bureau division (e.g. East South Central, Pacific).
+
+  - name: policy_eras
+    description: >
+      Manually maintained mapping of calendar year ranges to political
+      eras. Joined onto the spine in int_policy_era_assignments to label
+      each county-year with era_name, president, and a display color.
+    columns:
+      - name: era_name
+        description: Era label. One of Trump1, Biden, or Trump2.
+        data_tests:
+          - not_null
+          - unique
+      - name: president
+        description: President in office during this era.
+      - name: start_year
+        description: First calendar year (inclusive) belonging to this era.
+      - name: end_year
+        description: Last calendar year (inclusive) belonging to this era.
+      - name: color_hex
+        description: Hex color code used to represent this era consistently across dashboard charts.
+
+  - name: medicaid_expansion_status
+    description: >
+      State-level ACA Medicaid expansion status and adoption year.
+      Joined onto the spine in int_medicaid_exposure (on state_fips) to
+      derive the treatment/control grouping used throughout the mart
+      layer's Medicaid analysis.
+    columns:
+      - name: state_fips
+        description: 2-digit state FIPS code.
+        data_tests:
+          - not_null
+          - unique
+      - name: state_name
+        description: Full state name.
+      - name: state_abbr
+        description: 2-letter state postal abbreviation.
+      - name: expansion_status
+        description: Whether the state adopted ACA Medicaid expansion.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values:
+                  - expanded
+                  - not_expanded
+      - name: expansion_year
+        description: >
+          Calendar year the state's Medicaid expansion took effect. Blank
+          (null) for states with expansion_status = not_expanded.

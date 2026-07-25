@@ -3,30 +3,48 @@ version: 2
 models:
   - name: stg_sahie__county_uninsured
     description: >
-      Cleaned SAHIE county-level uninsurance estimates (2016–2022).
-      Suppressed small-county values are retained as nulls.
+      Cleaned SAHIE (Small Area Health Insurance Estimates) county-level
+      uninsurance estimates, 2017–2022. Sourced from the all-ages,
+      both-sexes, all-income-levels rows of the raw Census SAHIE extract.
+      This model is the authority for county × year coverage: the
+      intermediate spine (int_county_annual_clh) is built by left-joining
+      every other source onto this one. Suppressed small-county values are
+      retained as nulls rather than dropped or imputed.
     columns:
+      - name: county_year_key
+        description: >
+          Surrogate key hashed from (county_fips, year). Primary key of
+          this model.
+        data_tests:
+          - not_null
+          - unique
+
       - name: county_fips
-        description: 5-digit county FIPS code
+        description: 5-digit county FIPS code, derived from the raw GEOID column.
         data_tests:
           - not_null
 
       - name: state_fips
-        description: 2-digit state FIPS code
+        description: 2-digit state FIPS code, the left 2 digits of county_fips.
         data_tests:
           - not_null
 
+      - name: county_name
+        description: County name as reported by SAHIE (raw NAME column).
+
       - name: year
-        description: Estimate year
+        description: Estimate year.
         data_tests:
           - not_null
           - accepted_values:
               arguments:
-                values: [2016, 2017, 2018, 2019, 2020, 2021, 2022]
+                values: [2017, 2018, 2019, 2020, 2021, 2022]
 
       - name: pct_uninsured
         description: >
-          Percent uninsured (0–1 scale). Null for suppressed small counties.
+          Share of the population without health insurance (0–1 scale),
+          derived from raw PCTUI_PT / 100. Null for suppressed small
+          counties — do not impute or coalesce to 0.
         data_tests:
           - dbt_expectations.expect_column_values_to_be_between:
               arguments:
@@ -34,19 +52,49 @@ models:
                 max_value: 1
                 row_condition: "pct_uninsured is not null"
 
+      - name: n_uninsured
+        description: Estimated count of uninsured people (raw NUI_PT).
+
+      - name: n_insured
+        description: Estimated count of insured people (raw NIC_PT).
+
+      - name: sahie_total_population
+        description: >
+          Derived total population, computed as n_uninsured + n_insured.
+          Not an independently-sourced population figure.
+
   - name: stg_bls__county_unemployment
-    description: BLS LAUS annual average county unemployment rates (2016–2024).
+    description: >
+      Cleaned BLS LAUS (Local Area Unemployment Statistics) annual average
+      county unemployment rates, 2017–2024. Derived from the
+      la.data.64.County bulk file filtered to measure code 04 (unemployment
+      rate). State-level aggregate rows (county portion '000') are dropped.
     columns:
+      - name: county_year_key
+        description: >
+          Surrogate key hashed from (county_fips, year). Primary key of
+          this model.
+        data_tests:
+          - not_null
+          - unique
+
       - name: county_fips
+        description: 5-digit county FIPS code, zero-padded (state2 + county3).
+        data_tests:
+          - not_null
+
+      - name: state_fips
+        description: 2-digit state FIPS code, zero-padded.
         data_tests:
           - not_null
 
       - name: year
+        description: Calendar year of the annual-average estimate.
         data_tests:
           - not_null
 
       - name: unemployment_rate
-        description: Annual average unemployment rate (percent, 0–100 scale)
+        description: Annual average unemployment rate (percent, 0–100 scale).
         data_tests:
           - not_null
           - dbt_expectations.expect_column_values_to_be_between:
@@ -55,14 +103,38 @@ models:
                 max_value: 60
 
   - name: stg_acs__county_poverty
-    description: ACS 5-year county poverty, income, education, and housing (2016–2022).
+    description: >
+      Cleaned ACS 5-year estimates covering county-level poverty, income,
+      education, and housing cost burden, 2017–2022. Special-purpose
+      Census codes (e.g. -666666666 for missing median income) are
+      converted to null.
     columns:
-      - name: county_fips
+      - name: county_year_key
+        description: >
+          Surrogate key hashed from (county_fips, year). Primary key of
+          this model.
         data_tests:
           - not_null
-          
+          - unique
+
+      - name: county_fips
+        description: 5-digit county FIPS code.
+        data_tests:
+          - not_null
+
+      - name: state_fips
+        description: 2-digit state FIPS code.
+
+      - name: year
+        description: ACS 5-year estimate vintage year.
+
+      - name: median_household_income
+        description: >
+          Median household income in dollars. Census sentinel value
+          -666666666 (data not available) is converted to null.
+
       - name: poverty_rate
-        description: Share of population below federal poverty line (0–1 scale)
+        description: Share of population below the federal poverty line (0–1 scale).
         data_tests:
           - dbt_expectations.expect_column_values_to_be_between:
               arguments:
@@ -70,13 +142,70 @@ models:
                 max_value: 1
                 row_condition: "poverty_rate is not null"
 
+      - name: n_below_poverty
+        description: Estimated count of people with income below the poverty line.
+
+      - name: poverty_universe
+        description: >
+          Population universe used as the denominator for poverty_rate
+          (population for whom poverty status is determined).
+
+      - name: pct_bachelors_plus
+        description: >
+          Share of the relevant adult population with a bachelor's degree
+          or higher (0–1 scale).
+
+      - name: pct_hs_plus
+        description: >
+          Share of the relevant adult population with a high school
+          diploma or higher (0–1 scale).
+
+      - name: pct_severe_rent_burden
+        description: >
+          Share of renter households spending 50%+ of income on rent
+          (0–1 scale).
+
   - name: stg_ahrq__county_health
     description: >
-      AHRQ SDOH healthcare infrastructure variables (2016–2020).
-      Returns an empty view when AHRQ Excel files have not been downloaded.
+      AHRQ SDOH/CLH database healthcare infrastructure variables,
+      2017–2020. Requires manually downloaded AHRQ Excel files (see
+      data/raw/ahrq/); returns an empty scaffold view with the correct
+      column shape when those files have not been loaded, so downstream
+      LEFT JOINs degrade gracefully instead of breaking the pipeline.
     columns:
+      - name: county_year_key
+        description: >
+          Surrogate key hashed from (county_fips, year). Primary key of
+          this model.
+
       - name: county_fips
+        description: 5-digit county FIPS code, zero-padded.
         data_tests:
           - not_null:
               config:
                 where: "county_fips is not null"
+
+      - name: year
+        description: Year of the AHRQ CLH estimate (2017–2020).
+
+      - name: pct_uninsured_under65
+        description: >
+          Share of the under-65 population without health insurance
+          (0–1 scale), as reported by AHRQ.
+
+      - name: dist_trauma_center_miles
+        description: Distance from the county centroid to the nearest trauma center, in miles.
+
+      - name: mds_rate_per_100k
+        description: Rate of physicians (MDs) per 100,000 population.
+
+      - name: rural_urban_code_2013
+        description: >
+          USDA 2013 Rural-Urban Continuum Code (RUCC). 1–3 = metro,
+          4–9 = non-metro.
+
+      - name: is_rural
+        description: >
+          Boolean rurality flag derived from rural_urban_code_2013: true
+          when RUCC is 4–9 (non-metro), false when 1–3 (metro), null when
+          the code itself is null.
