@@ -13,27 +13,27 @@ cleaned as (
     select
         county_fips,
         state_fips,
-        cast(year as integer)                               as year,
+        cast(year as int64)                                 as year,
 
         -- Income
-        nullif(cast(median_household_income as double), -666666666)
+        nullif(cast(median_household_income as float64), -666666666)
                                                             as median_household_income,
 
         -- Poverty
-        cast(poverty_rate as double)                        as poverty_rate,
-        cast(n_below_poverty as double)                     as n_below_poverty,
-        cast(poverty_universe as double)                    as poverty_universe,
+        cast(poverty_rate as float64)                       as poverty_rate,
+        cast(n_below_poverty as float64)                    as n_below_poverty,
+        cast(poverty_universe as float64)                   as poverty_universe,
 
         -- Education
-        cast(pct_bachelors_plus as double)                  as pct_bachelors_plus,
-        cast(pct_hs_plus as double)                         as pct_hs_plus,
+        cast(pct_bachelors_plus as float64)                 as pct_bachelors_plus,
+        cast(pct_hs_plus as float64)                        as pct_hs_plus,
 
         -- Housing cost burden
-        cast(pct_severe_rent_burden as double)              as pct_severe_rent_burden
+        cast(pct_severe_rent_burden as float64)             as pct_severe_rent_burden
 
     from source
     where county_fips is not null
-      and cast(year as integer) between 2017 and 2022
+      and cast(year as int64) between 2017 and 2022
       and right(county_fips, 3) != '000'
 )
 

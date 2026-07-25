@@ -35,7 +35,7 @@ policy_events as (
             when year = 2024 then 'Medicaid unwinding ends (Jun); enrollment drops'
             when year = 2025 then 'Trump2 Medicaid work requirements / DOGE cuts'
         end as policy_event_label
-    from (values (2016),(2017),(2018),(2019),(2020),(2021),(2022),(2023),(2024),(2025)) t(year)
+    from unnest([2016,2017,2018,2019,2020,2021,2022,2023,2024,2025]) as year
 ),
 
 assigned as (

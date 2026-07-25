@@ -11,26 +11,26 @@ with source as (
 
 cleaned as (
     select
-        -- SAHIE GEOID is the 5-digit county FIPS
-        lpad(cast("GEOID" as varchar), 5, '0')              as county_fips,
-        left(lpad(cast("GEOID" as varchar), 5, '0'), 2)     as state_fips,
-        "NAME"                                              as county_name,
-        cast(year as integer)                               as year,
+        -- SAHIE geoid is the 5-digit county FIPS
+        lpad(cast(geoid as string), 5, '0')              as county_fips,
+        left(lpad(cast(geoid as string), 5, '0'), 2)     as state_fips,
+        name                                              as county_name,
+        cast(year as int64)                               as year,
 
         -- Core uninsurance metrics
-        -- PCTUI_PT is suppressed (null) for small counties; preserve nulls.
-        try_cast("PCTUI_PT" as double) / 100.0               as pct_uninsured,
-        try_cast("NUI_PT"   as double)                       as n_uninsured,
-        try_cast("NIC_PT"   as double)                       as n_insured,
+        -- pctui_pt is suppressed (null) for small counties; preserve nulls.
+        safe_cast(pctui_pt as float64) / 100.0               as pct_uninsured,
+        safe_cast(nui_pt   as float64)                       as n_uninsured,
+        safe_cast(nic_pt   as float64)                       as n_insured,
 
         -- Derived total population from insured + uninsured
-        try_cast("NUI_PT" as double)
-            + try_cast("NIC_PT" as double)                   as sahie_total_population
+        safe_cast(nui_pt as float64)
+            + safe_cast(nic_pt as float64)                   as sahie_total_population
     from source
-    where "GEOID" is not null
-      and cast(year as integer) between 2017 and 2022
+    where geoid is not null
+      and cast(year as int64) between 2017 and 2022
       -- Exclude state-level aggregate rows (FIPS ends in '000')
-      and right(lpad(cast("GEOID" as varchar), 5, '0'), 3) != '000'
+      and right(lpad(cast(geoid as string), 5, '0'), 3) != '000'
 )
 
 select

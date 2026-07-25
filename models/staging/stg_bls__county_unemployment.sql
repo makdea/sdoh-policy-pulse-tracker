@@ -11,17 +11,17 @@ with source as (
 
 cleaned as (
     select
-        lpad(cast(county_fips as varchar), 5, '0')  as county_fips,
-        lpad(cast(state_fips  as varchar), 2, '0')  as state_fips,
-        cast(year as integer)                       as year,
-        cast(unemployment_rate as double)           as unemployment_rate
+        lpad(cast(county_fips as string), 5, '0')  as county_fips,
+        lpad(cast(state_fips  as string), 2, '0')  as state_fips,
+        cast(year as int64)                        as year,
+        cast(unemployment_rate as float64)         as unemployment_rate
 
     from source
     where county_fips is not null
       and unemployment_rate is not null
-      and cast(year as integer) between 2017 and 2024
+      and cast(year as int64) between 2017 and 2024
       -- Drop state-level rows (county portion is '000')
-      and right(lpad(cast(county_fips as varchar), 5, '0'), 3) != '000'
+      and right(lpad(cast(county_fips as string), 5, '0'), 3) != '000'
 )
 
 select

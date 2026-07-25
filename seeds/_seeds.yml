@@ -47,6 +47,11 @@ seeds:
       Joined onto the spine in int_medicaid_exposure (on state_fips) to
       derive the treatment/control grouping used throughout the mart
       layer's Medicaid analysis.
+    config:
+      # expansion_year is blank for non-expansion states; force int64 rather
+      # than trust BigQuery's seed-load type inference on a sparse column.
+      column_types:
+        expansion_year: int64
     columns:
       - name: state_fips
         description: 2-digit state FIPS code.

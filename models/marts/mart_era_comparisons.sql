@@ -28,16 +28,18 @@ aggregated as (
 
         -- Uninsurance
         avg(pct_uninsured)                                          as avg_pct_uninsured,
-        median(pct_uninsured)                                       as median_pct_uninsured,
+        -- approx_quantiles(x, 2)[offset(1)] is BigQuery's equivalent of
+        -- median() (no exact MEDIAN aggregate on BigQuery)
+        approx_quantiles(pct_uninsured, 2)[offset(1)]               as median_pct_uninsured,
         stddev(pct_uninsured)                                       as sd_pct_uninsured,
 
         -- Unemployment
         avg(unemployment_rate)                                      as avg_unemployment_rate,
-        median(unemployment_rate)                                   as median_unemployment_rate,
+        approx_quantiles(unemployment_rate, 2)[offset(1)]           as median_unemployment_rate,
 
         -- Poverty
         avg(poverty_rate)                                           as avg_poverty_rate,
-        median(poverty_rate)                                        as median_poverty_rate,
+        approx_quantiles(poverty_rate, 2)[offset(1)]                as median_poverty_rate,
 
         -- Income
         avg(median_household_income)                                as avg_median_hh_income,

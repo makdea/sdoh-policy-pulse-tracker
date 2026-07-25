@@ -8,55 +8,53 @@
 -- This model is a no-op view when no AHRQ data was ingested.
 -- The intermediate layer performs a LEFT JOIN so missing AHRQ data
 -- degrades gracefully rather than breaking the pipeline.
+--
+-- Existence check uses adapter.get_relation instead of a raw
+-- information_schema query so it works across warehouses without needing
+-- a project/dataset-qualified INFORMATION_SCHEMA reference.
 
-{% set ahrq_exists %}
-    select count(*) from information_schema.tables
-    where table_schema = 'raw' and table_name = 'ahrq_clh'
-{% endset %}
+{% set ahrq_source = source('raw', 'ahrq_clh') %}
+{% set ahrq_relation = adapter.get_relation(
+    database=ahrq_source.database,
+    schema=ahrq_source.schema,
+    identifier=ahrq_source.identifier
+) if execute else none %}
 
 with source as (
-    {% if execute %}
-        {% set result = run_query(ahrq_exists) %}
-        {% if result.columns[0].values()[0] > 0 %}
-            select * from {{ source('raw', 'ahrq_clh') }}
-        {% else %}
-            -- AHRQ files not yet loaded; return empty scaffold
-            select
-                cast(null as varchar)  as county_year_key,
-                cast(null as varchar)  as county_fips,
-                cast(null as integer)  as year,
-                cast(null as double)   as pct_uninsured_18_64,
-                cast(null as double)   as median_hh_income,
-                cast(null as double)   as pct_below_poverty,
-                cast(null as double)   as pct_unemployed,
-                cast(null as double)   as dist_trauma_center_miles,
-                cast(null as double)   as mds_per_10k,
-                cast(null as integer)  as rural_urban_code
-            where 1 = 0
-        {% endif %}
+    {% if ahrq_relation is not none %}
+        select * from {{ ahrq_source }}
     {% else %}
-        select * from {{ source('raw', 'ahrq_clh') }}
+        -- AHRQ files not yet loaded; return empty scaffold matching the
+        -- columns `cleaned` below expects.
+        select
+            cast(null as string)  as county_fips,
+            cast(null as int64)   as year,
+            cast(null as float64) as pct_uninsured_under65,
+            cast(null as float64) as dist_trauma_center_miles,
+            cast(null as float64) as mds_rate_per_100k,
+            cast(null as int64)   as rural_urban_code_2013
+        where 1 = 0
     {% endif %}
 ),
 
 cleaned as (
     select
-        lpad(cast(county_fips as varchar), 5, '0')      as county_fips,
-        cast(year as integer)                           as year,
-        cast(pct_uninsured_under65    as double)        as pct_uninsured_under65,
-        cast(dist_trauma_center_miles as double)        as dist_trauma_center_miles,
-        cast(mds_rate_per_100k        as double)        as mds_rate_per_100k,
-        cast(rural_urban_code_2013    as integer)       as rural_urban_code_2013,
+        lpad(cast(county_fips as string), 5, '0')       as county_fips,
+        cast(year as int64)                             as year,
+        cast(pct_uninsured_under65    as float64)       as pct_uninsured_under65,
+        cast(dist_trauma_center_miles as float64)       as dist_trauma_center_miles,
+        cast(mds_rate_per_100k        as float64)       as mds_rate_per_100k,
+        cast(rural_urban_code_2013    as int64)         as rural_urban_code_2013,
 
         -- Rural flag: RUCC 4–9 = non-metro (USDA classification)
         case
-            when cast(rural_urban_code_2013 as integer) >= 4 then true
-            when cast(rural_urban_code_2013 as integer) between 1 and 3 then false
+            when cast(rural_urban_code_2013 as int64) >= 4 then true
+            when cast(rural_urban_code_2013 as int64) between 1 and 3 then false
         end                                             as is_rural
 
     from source
     where county_fips is not null
-    and year::integer > 2016
+    and cast(year as int64) > 2016
 )
 
 select
