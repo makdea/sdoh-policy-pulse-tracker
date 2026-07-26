@@ -73,5 +73,27 @@ with_order as (
     from aggregated
 )
 
-select * from with_order
+select
+    era_name,
+    president,
+    era_color_hex,
+    is_expansion_state,
+    expansion_status,
+    census_region,
+    n_counties,
+    n_county_years,
+    avg_pct_uninsured,
+    median_pct_uninsured,
+    sd_pct_uninsured,
+    avg_unemployment_rate,
+    median_unemployment_rate,
+    avg_poverty_rate,
+    median_poverty_rate,
+    avg_median_hh_income,
+    avg_pct_bachelors_plus,
+    avg_pct_severe_rent_burden,
+    era_start_year,
+    era_end_year,
+    era_sort_order
+from with_order
 order by era_sort_order, is_expansion_state desc

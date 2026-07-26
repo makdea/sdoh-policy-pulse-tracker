@@ -74,4 +74,37 @@ final as (
     from base
 )
 
-select * from final
+select
+    county_fips,
+    state_fips,
+    county_name,
+    state_name,
+    state_abbr,
+    census_region,
+    census_division,
+    year,
+    era_name,
+    president,
+    era_color_hex,
+    policy_event_label,
+    expansion_status,
+    expansion_year,
+    is_expansion_state,
+    years_since_expansion,
+    expansion_phase,
+    pct_uninsured,
+    n_uninsured,
+    n_insured,
+    sahie_total_population,
+    unemployment_rate,
+    median_household_income,
+    poverty_rate,
+    pct_bachelors_plus,
+    pct_hs_plus,
+    pct_severe_rent_burden,
+    dist_trauma_center_miles,
+    mds_rate_per_100k,
+    is_rural,
+    rural_urban_code_2013,
+    sdoh_disadvantage_index
+from final

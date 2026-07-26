@@ -168,4 +168,17 @@ final as (
     from did
 )
 
-select * from final
+select
+    outcome,
+    treated_pre,
+    treated_post,
+    control_pre,
+    control_post,
+    treated_change,
+    control_change,
+    did_estimate,
+    n_treated_counties,
+    n_control_counties,
+    interpretation_note,
+    did_estimate_pct_pts
+from final

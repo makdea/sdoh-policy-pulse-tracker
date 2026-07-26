@@ -53,4 +53,32 @@ assigned as (
         on spine.year = pol.year
 )
 
-select * from assigned
+select
+    county_year_key,
+    county_fips,
+    state_fips,
+    county_name,
+    state_name,
+    state_abbr,
+    census_region,
+    census_division,
+    year,
+    pct_uninsured,
+    n_uninsured,
+    n_insured,
+    sahie_total_population,
+    unemployment_rate,
+    median_household_income,
+    poverty_rate,
+    pct_bachelors_plus,
+    pct_hs_plus,
+    pct_severe_rent_burden,
+    dist_trauma_center_miles,
+    mds_rate_per_100k,
+    rural_urban_code_2013,
+    is_rural,
+    era_name,
+    president,
+    era_color_hex,
+    policy_event_label
+from assigned
