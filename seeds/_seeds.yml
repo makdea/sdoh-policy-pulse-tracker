@@ -6,8 +6,14 @@ seeds:
       Static lookup of US state FIPS codes to names, abbreviations, and
       Census Bureau region/division. Joined onto the county-year spine in
       int_county_annual_clh to add geography labels.
+    config:
+      # state_fips values like "01" look numeric; force string so this
+      # matches stg_sahie__county_uninsured.state_fips (STRING) on join.
+      column_types:
+        state_fips: string
     columns:
       - name: state_fips
+        data_type: string
         description: 2-digit state FIPS code.
         data_tests:
           - not_null
@@ -52,6 +58,9 @@ seeds:
       # than trust BigQuery's seed-load type inference on a sparse column.
       column_types:
         expansion_year: int64
+      # state_fips values like "01" look numeric; force string so this
+      # matches stg_sahie__county_uninsured.state_fips (STRING) on join.
+        state_fips: string
     columns:
       - name: state_fips
         description: 2-digit state FIPS code.
