@@ -33,6 +33,13 @@ aggregated as (
         approx_quantiles(pct_uninsured, 2)[offset(1)]               as median_pct_uninsured,
         stddev(pct_uninsured)                                       as sd_pct_uninsured,
 
+        -- Raw sums for a properly population-weighted uninsurance rate
+        -- (sum(n_uninsured)/sum(sahie_total_population)), instead of
+        -- avg_pct_uninsured's mean-of-counties. Sums-of-sums still roll up
+        -- correctly if Lightdash further aggregates across these cells.
+        sum(n_uninsured)                                            as sum_n_uninsured,
+        sum(sahie_total_population)                                 as sum_sahie_total_population,
+
         -- Unemployment
         avg(unemployment_rate)                                      as avg_unemployment_rate,
         approx_quantiles(unemployment_rate, 2)[offset(1)]           as median_unemployment_rate,
@@ -85,6 +92,8 @@ select
     avg_pct_uninsured,
     median_pct_uninsured,
     sd_pct_uninsured,
+    sum_n_uninsured,
+    sum_sahie_total_population,
     avg_unemployment_rate,
     median_unemployment_rate,
     avg_poverty_rate,

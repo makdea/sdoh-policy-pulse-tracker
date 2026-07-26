@@ -15,6 +15,12 @@ models:
         description: 5-digit county FIPS code.
         data_tests:
           - not_null
+        config:
+          meta:
+            metrics:
+              count_distinct_counties:
+                type: count_distinct
+                label: "# Counties"
 
       - name: state_fips
         data_type: string
@@ -110,6 +116,13 @@ models:
                 min_value: 0
                 max_value: 1
                 row_condition: "pct_uninsured is not null"
+        config:
+          meta:
+            metrics:
+              avg_pct_uninsured:
+                type: average
+                label: "Avg % Uninsured (unweighted — mean of counties, not people)"
+                format: percent
 
       - name: n_uninsured
         data_type: float64
@@ -122,18 +135,51 @@ models:
       - name: sahie_total_population
         data_type: float64
         description: Derived total population (n_uninsured + n_insured).
+        config:
+          meta:
+            metrics:
+              weighted_avg_pct_uninsured:
+                type: number
+                sql: "SUM(${TABLE}.n_uninsured) / SUM(${TABLE}.sahie_total_population)"
+                label: "% Uninsured (population-weighted)"
+                format: percent
+                description: >
+                  Correctly weighted: total uninsured people divided by
+                  total population, across whatever slice is selected.
+                  Use this instead of "Avg % Uninsured" when comparing
+                  regions/eras/expansion groups with different county sizes.
 
       - name: unemployment_rate
         data_type: float64
         description: Annual average unemployment rate (percent, 0–100 scale).
+        config:
+          meta:
+            metrics:
+              avg_unemployment_rate:
+                type: average
+                label: "Avg Unemployment Rate"
 
       - name: median_household_income
         data_type: float64
         description: Median household income in dollars.
+        config:
+          meta:
+            metrics:
+              avg_median_household_income:
+                type: average
+                label: "Avg Median HH Income"
+                format: usd
 
       - name: poverty_rate
         data_type: float64
         description: Share of population below the federal poverty line (0–1 scale).
+        config:
+          meta:
+            metrics:
+              avg_poverty_rate:
+                type: average
+                label: "Avg Poverty Rate"
+                format: percent
 
       - name: pct_bachelors_plus
         data_type: float64
@@ -179,6 +225,12 @@ models:
           full table (window functions with no partitioning). Higher
           values indicate more disadvantage. Null whenever any of the
           three component columns is null for that row.
+        config:
+          meta:
+            metrics:
+              avg_sdoh_disadvantage_index:
+                type: average
+                label: "Avg SDOH Disadvantage Index"
 
   - name: mart_era_comparisons
     description: >
@@ -222,16 +274,35 @@ models:
               arguments:
                 min_value: 1
                 max_value: 3200
+        config:
+          meta:
+            metrics:
+              sum_n_counties:
+                type: sum
+                label: "Total Counties"
 
       - name: n_county_years
         data_type: int64
         description: >
           Total county-year row count within this cell (n_counties summed
           across the years spanned by the era).
+        config:
+          meta:
+            metrics:
+              sum_n_county_years:
+                type: sum
+                label: "Total County-Years"
 
       - name: avg_pct_uninsured
         data_type: float64
         description: Mean pct_uninsured across all county-years in this cell.
+        config:
+          meta:
+            metrics:
+              avg_avg_pct_uninsured:
+                type: average
+                label: "Avg % Uninsured (mean of cell means — not weighted by n_county_years)"
+                format: percent
 
       - name: median_pct_uninsured
         data_type: float64
@@ -241,9 +312,41 @@ models:
         data_type: float64
         description: Standard deviation of pct_uninsured across this cell.
 
+      - name: sum_n_uninsured
+        data_type: float64
+        description: >
+          Sum of n_uninsured across all county-years in this cell. Combine
+          with sum_sahie_total_population for a correctly population-weighted
+          uninsurance rate, instead of avg_pct_uninsured's mean-of-counties.
+
+      - name: sum_sahie_total_population
+        data_type: float64
+        description: >
+          Sum of sahie_total_population across all county-years in this
+          cell. Denominator for the population-weighted uninsurance rate.
+        config:
+          meta:
+            metrics:
+              weighted_avg_pct_uninsured:
+                type: number
+                sql: "SUM(${TABLE}.sum_n_uninsured) / SUM(${TABLE}.sum_sahie_total_population)"
+                label: "% Uninsured (population-weighted)"
+                format: percent
+                description: >
+                  Correctly weighted: total uninsured people divided by
+                  total population, across whatever slice is selected.
+                  Sums-of-sums roll up correctly even if you further group
+                  by fewer dimensions than this table's native grain.
+
       - name: avg_unemployment_rate
         data_type: float64
         description: Mean unemployment_rate across all county-years in this cell.
+        config:
+          meta:
+            metrics:
+              avg_avg_unemployment_rate:
+                type: average
+                label: "Avg Unemployment Rate (mean of cell means — not weighted by n_county_years)"
 
       - name: median_unemployment_rate
         data_type: float64
@@ -252,6 +355,13 @@ models:
       - name: avg_poverty_rate
         data_type: float64
         description: Mean poverty_rate across all county-years in this cell.
+        config:
+          meta:
+            metrics:
+              avg_avg_poverty_rate:
+                type: average
+                label: "Avg Poverty Rate (mean of cell means — not weighted by n_county_years)"
+                format: percent
 
       - name: median_poverty_rate
         data_type: float64
@@ -260,14 +370,35 @@ models:
       - name: avg_median_hh_income
         data_type: float64
         description: Mean of median_household_income across all county-years in this cell.
+        config:
+          meta:
+            metrics:
+              avg_avg_median_hh_income:
+                type: average
+                label: "Avg Median HH Income (mean of cell means — not weighted by n_county_years)"
+                format: usd
 
       - name: avg_pct_bachelors_plus
         data_type: float64
         description: Mean pct_bachelors_plus across all county-years in this cell.
+        config:
+          meta:
+            metrics:
+              avg_avg_pct_bachelors_plus:
+                type: average
+                label: "Avg % Bachelor's+ (mean of cell means — not weighted by n_county_years)"
+                format: percent
 
       - name: avg_pct_severe_rent_burden
         data_type: float64
         description: Mean pct_severe_rent_burden across all county-years in this cell.
+        config:
+          meta:
+            metrics:
+              avg_avg_pct_severe_rent_burden:
+                type: average
+                label: "Avg % Severe Rent Burden (mean of cell means — not weighted by n_county_years)"
+                format: percent
 
       - name: era_start_year
         data_type: int64
@@ -350,6 +481,18 @@ models:
           control_change, in the outcome's native units/scale.
         data_tests:
           - not_null
+        config:
+          meta:
+            metrics:
+              avg_did_estimate:
+                type: average
+                label: "Avg DiD Estimate"
+              min_did_estimate:
+                type: min
+                label: "Min DiD Estimate"
+              max_did_estimate:
+                type: max
+                label: "Max DiD Estimate"
 
       - name: n_treated_counties
         data_type: int64
