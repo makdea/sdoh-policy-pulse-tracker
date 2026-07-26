@@ -7,10 +7,15 @@ seeds:
       Census Bureau region/division. Joined onto the county-year spine in
       int_county_annual_clh to add geography labels.
     config:
-      # state_fips values like "01" look numeric; force string so this
-      # matches stg_sahie__county_uninsured.state_fips (STRING) on join.
+      # All columns pinned explicitly rather than relying on BigQuery's
+      # seed-load type inference (state_fips like "01" looks numeric but
+      # must stay STRING to match stg_sahie__county_uninsured.state_fips).
       column_types:
         state_fips: string
+        state_name: string
+        state_abbr: string
+        census_region: string
+        census_division: string
     columns:
       - name: state_fips
         data_type: string
@@ -19,12 +24,16 @@ seeds:
           - not_null
           - unique
       - name: state_name
+        data_type: string
         description: Full state name.
       - name: state_abbr
+        data_type: string
         description: 2-letter state postal abbreviation.
       - name: census_region
+        data_type: string
         description: Census Bureau region (Northeast, Midwest, South, West).
       - name: census_division
+        data_type: string
         description: Census Bureau division (e.g. East South Central, Pacific).
 
   - name: policy_eras
@@ -32,19 +41,31 @@ seeds:
       Manually maintained mapping of calendar year ranges to political
       eras. Joined onto the spine in int_policy_era_assignments to label
       each county-year with era_name, president, and a display color.
+    config:
+      column_types:
+        era_name: string
+        president: string
+        start_year: int64
+        end_year: int64
+        color_hex: string
     columns:
       - name: era_name
+        data_type: string
         description: Era label. One of Trump1, Biden, or Trump2.
         data_tests:
           - not_null
           - unique
       - name: president
+        data_type: string
         description: President in office during this era.
       - name: start_year
+        data_type: int64
         description: First calendar year (inclusive) belonging to this era.
       - name: end_year
+        data_type: int64
         description: Last calendar year (inclusive) belonging to this era.
       - name: color_hex
+        data_type: string
         description: Hex color code used to represent this era consistently across dashboard charts.
 
   - name: medicaid_expansion_status
@@ -56,22 +77,29 @@ seeds:
     config:
       # expansion_year is blank for non-expansion states; force int64 rather
       # than trust BigQuery's seed-load type inference on a sparse column.
-      column_types:
-        expansion_year: int64
       # state_fips values like "01" look numeric; force string so this
       # matches stg_sahie__county_uninsured.state_fips (STRING) on join.
+      column_types:
         state_fips: string
+        state_name: string
+        state_abbr: string
+        expansion_status: string
+        expansion_year: int64
     columns:
       - name: state_fips
+        data_type: string
         description: 2-digit state FIPS code.
         data_tests:
           - not_null
           - unique
       - name: state_name
+        data_type: string
         description: Full state name.
       - name: state_abbr
+        data_type: string
         description: 2-letter state postal abbreviation.
       - name: expansion_status
+        data_type: string
         description: Whether the state adopted ACA Medicaid expansion.
         data_tests:
           - accepted_values:
@@ -80,6 +108,7 @@ seeds:
                   - expanded
                   - not_expanded
       - name: expansion_year
+        data_type: int64
         description: >
           Calendar year the state's Medicaid expansion took effect. Blank
           (null) for states with expansion_status = not_expanded.

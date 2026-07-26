@@ -11,34 +11,43 @@ models:
       table for dashboard query performance.
     columns:
       - name: county_fips
+        data_type: string
         description: 5-digit county FIPS code.
         data_tests:
           - not_null
 
       - name: state_fips
+        data_type: string
         description: 2-digit state FIPS code.
 
       - name: county_name
+        data_type: string
         description: County name as reported by SAHIE.
 
       - name: state_name
+        data_type: string
         description: Full state name.
 
       - name: state_abbr
+        data_type: string
         description: 2-letter state postal abbreviation.
 
       - name: census_region
+        data_type: string
         description: Census Bureau region (Northeast, Midwest, South, West).
 
       - name: census_division
+        data_type: string
         description: Census Bureau division (e.g. East South Central, Pacific).
 
       - name: year
+        data_type: int64
         description: Calendar year of the observation.
         data_tests:
           - not_null
 
       - name: era_name
+        data_type: string
         description: Political era label (Trump1, Biden, or Trump2) for the year.
         data_tests:
           - not_null
@@ -47,42 +56,51 @@ models:
                 values: ['Trump1', 'Biden', 'Trump2']
 
       - name: president
+        data_type: string
         description: President in office during era_name.
 
       - name: era_color_hex
+        data_type: string
         description: Hex color code assigned to era_name for consistent chart styling.
 
       - name: policy_event_label
+        data_type: string
         description: >
           Free-text label for a significant federal policy change in this
           calendar year (e.g. ACA mandate repeal, Medicaid unwinding).
           Null for years with no flagged event.
 
       - name: expansion_status
+        data_type: string
         description: State-level Medicaid expansion status ('expanded' or 'not_expanded').
 
       - name: expansion_year
+        data_type: int64
         description: >
           Calendar year the state adopted ACA Medicaid expansion. Null
           for non-expansion states.
 
       - name: is_expansion_state
+        data_type: bool
         description: >
           Boolean treatment indicator: true for Medicaid expansion states,
           false otherwise.
 
       - name: years_since_expansion
+        data_type: int64
         description: >
           Years since the state adopted Medicaid expansion (0 in the
           expansion year). Null for non-expansion states and
           pre-expansion years.
 
       - name: expansion_phase
+        data_type: string
         description: >
           Categorical phase relative to Medicaid expansion: never_expanded,
           pre_expansion, expansion_year, or post_expansion.
 
       - name: pct_uninsured
+        data_type: float64
         description: >
           Percent uninsured (0–1 scale), from SAHIE. Null for suppressed
           small counties.
@@ -94,53 +112,67 @@ models:
                 row_condition: "pct_uninsured is not null"
 
       - name: n_uninsured
+        data_type: float64
         description: Estimated count of uninsured people.
 
       - name: n_insured
+        data_type: float64
         description: Estimated count of insured people.
 
       - name: sahie_total_population
+        data_type: float64
         description: Derived total population (n_uninsured + n_insured).
 
       - name: unemployment_rate
+        data_type: float64
         description: Annual average unemployment rate (percent, 0–100 scale).
 
       - name: median_household_income
+        data_type: float64
         description: Median household income in dollars.
 
       - name: poverty_rate
+        data_type: float64
         description: Share of population below the federal poverty line (0–1 scale).
 
       - name: pct_bachelors_plus
+        data_type: float64
         description: Share of adults with a bachelor's degree or higher (0–1 scale).
 
       - name: pct_hs_plus
+        data_type: float64
         description: Share of adults with a high school diploma or higher (0–1 scale).
 
       - name: pct_severe_rent_burden
+        data_type: float64
         description: Share of renter households with severe rent burden (0–1 scale).
 
       - name: dist_trauma_center_miles
+        data_type: float64
         description: >
           Distance from the county centroid to the nearest trauma center,
           in miles. Null without AHRQ files loaded.
 
       - name: mds_rate_per_100k
+        data_type: float64
         description: >
           Rate of physicians (MDs) per 100,000 population. Null without
           AHRQ files loaded.
 
       - name: is_rural
+        data_type: bool
         description: >
           Boolean rurality flag (RUCC 4–9 = rural). Null without AHRQ
           files loaded.
 
       - name: rural_urban_code_2013
+        data_type: int64
         description: >
           USDA 2013 Rural-Urban Continuum Code (RUCC). Null without AHRQ
           files loaded.
 
       - name: sdoh_disadvantage_index
+        data_type: float64
         description: >
           Composite disadvantage score: the mean of z-scored
           pct_uninsured, poverty_rate, and unemployment_rate across the
@@ -157,26 +189,33 @@ models:
       expansion_status, and census_region.
     columns:
       - name: era_name
+        data_type: string
         description: Political era label (Trump1, Biden, or Trump2).
         data_tests:
           - not_null
 
       - name: president
+        data_type: string
         description: President in office during era_name.
 
       - name: era_color_hex
+        data_type: string
         description: Hex color code assigned to era_name for consistent chart styling.
 
       - name: is_expansion_state
+        data_type: bool
         description: Boolean grouping key — true for Medicaid expansion states.
 
       - name: expansion_status
+        data_type: string
         description: State-level Medicaid expansion status ('expanded' or 'not_expanded').
 
       - name: census_region
+        data_type: string
         description: Census Bureau region (Northeast, Midwest, South, West).
 
       - name: n_counties
+        data_type: int64
         description: Distinct county count within this era/expansion/region cell.
         data_tests:
           - dbt_expectations.expect_column_values_to_be_between:
@@ -185,47 +224,61 @@ models:
                 max_value: 3200
 
       - name: n_county_years
+        data_type: int64
         description: >
           Total county-year row count within this cell (n_counties summed
           across the years spanned by the era).
 
       - name: avg_pct_uninsured
+        data_type: float64
         description: Mean pct_uninsured across all county-years in this cell.
 
       - name: median_pct_uninsured
+        data_type: float64
         description: Median pct_uninsured across all county-years in this cell.
 
       - name: sd_pct_uninsured
+        data_type: float64
         description: Standard deviation of pct_uninsured across this cell.
 
       - name: avg_unemployment_rate
+        data_type: float64
         description: Mean unemployment_rate across all county-years in this cell.
 
       - name: median_unemployment_rate
+        data_type: float64
         description: Median unemployment_rate across all county-years in this cell.
 
       - name: avg_poverty_rate
+        data_type: float64
         description: Mean poverty_rate across all county-years in this cell.
 
       - name: median_poverty_rate
+        data_type: float64
         description: Median poverty_rate across all county-years in this cell.
 
       - name: avg_median_hh_income
+        data_type: float64
         description: Mean of median_household_income across all county-years in this cell.
 
       - name: avg_pct_bachelors_plus
+        data_type: float64
         description: Mean pct_bachelors_plus across all county-years in this cell.
 
       - name: avg_pct_severe_rent_burden
+        data_type: float64
         description: Mean pct_severe_rent_burden across all county-years in this cell.
 
       - name: era_start_year
+        data_type: int64
         description: Earliest calendar year observed in this cell (bounded by data availability).
 
       - name: era_end_year
+        data_type: int64
         description: Latest calendar year observed in this cell (bounded by data availability).
 
       - name: era_sort_order
+        data_type: int64
         description: >
           Integer sort key for consistent chart ordering: 1 = Trump1,
           2 = Biden, 3 = Trump2.
@@ -245,6 +298,7 @@ models:
       more (larger decrease in uninsurance) than non-expansion states.
     columns:
       - name: outcome
+        data_type: string
         description: >
           Name of the outcome variable this row's DiD estimate applies to.
         data_tests:
@@ -258,32 +312,39 @@ models:
                   - median_household_income
 
       - name: treated_pre
+        data_type: float64
         description: >
           Average value of `outcome` for expansion states during the
           Trump1 era (pre-period).
 
       - name: treated_post
+        data_type: float64
         description: >
           Average value of `outcome` for expansion states during the
           Biden era (post-period).
 
       - name: control_pre
+        data_type: float64
         description: >
           Average value of `outcome` for non-expansion states during the
           Trump1 era (pre-period).
 
       - name: control_post
+        data_type: float64
         description: >
           Average value of `outcome` for non-expansion states during the
           Biden era (post-period).
 
       - name: treated_change
+        data_type: float64
         description: treated_post − treated_pre.
 
       - name: control_change
+        data_type: float64
         description: control_post − control_pre.
 
       - name: did_estimate
+        data_type: float64
         description: >
           The difference-in-differences estimate: treated_change −
           control_change, in the outcome's native units/scale.
@@ -291,16 +352,20 @@ models:
           - not_null
 
       - name: n_treated_counties
+        data_type: int64
         description: Distinct count of expansion-state counties contributing to this estimate.
 
       - name: n_control_counties
+        data_type: int64
         description: Distinct count of non-expansion-state counties contributing to this estimate.
 
       - name: interpretation_note
+        data_type: string
         description: >
           Human-readable guidance on how to read the sign of did_estimate
           for this outcome (e.g. "lower is better — negative DiD favors
           expansion states").
 
       - name: did_estimate_pct_pts
+        data_type: float64
         description: did_estimate rescaled to percentage points (did_estimate * 100), rounded to 2 decimals.
