@@ -53,8 +53,14 @@ cell_avgs as (
 pivoted as (
     select
         is_expansion_state,
-        n_counties,
-        n_obs,
+        -- n_counties is stable across eras for a given treatment group;
+        -- n_obs legitimately differs (Trump1 spans 4 years, Biden only 2
+        -- within SAHIE's coverage window) so it must NOT be a group-by key
+        -- here — grouping on it previously split each era into its own row,
+        -- leaving trump1_*/biden_* never populated together and every
+        -- did_estimate null downstream.
+        max(n_counties) as n_counties,
+        sum(n_obs)       as n_obs,
 -- Takes just the max, so a single outlier can change the outcome a lot here
         max(case when era_name = 'Trump1' then avg_pct_uninsured    end) as trump1_pct_uninsured,
         max(case when era_name = 'Biden'  then avg_pct_uninsured    end) as biden_pct_uninsured,
@@ -69,7 +75,7 @@ pivoted as (
         max(case when era_name = 'Biden'  then avg_median_hh_income  end) as biden_median_income
 
     from cell_avgs
-    group by is_expansion_state, n_counties, n_obs
+    group by is_expansion_state
 ),
 
 -- Compute within-group changes

@@ -44,6 +44,7 @@ models:
           - accepted_values:
               arguments:
                 values: [2017, 2018, 2019, 2020, 2021, 2022]
+                quote: false
 
       - name: pct_uninsured
         data_type: float64

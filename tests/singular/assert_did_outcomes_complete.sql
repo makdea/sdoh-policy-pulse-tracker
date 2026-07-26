@@ -2,7 +2,7 @@
 -- Fails if any outcome is missing, indicating upstream join failure.
 
 with expected as (
-    select unnest(['pct_uninsured','unemployment_rate','poverty_rate','median_household_income']) as outcome
+    select * from unnest(['pct_uninsured','unemployment_rate','poverty_rate','median_household_income']) as outcome
 ),
 actual as (
     select outcome from {{ ref('mart_diff_in_diff') }}
