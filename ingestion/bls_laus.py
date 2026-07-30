@@ -23,8 +23,15 @@ SERIES_FILE = "la.series"
 
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:151.0) Gecko/20100101 Firefox/151.0"}
 
-# Measure code 04 = unemployment rate (percent)
-UNEMPLOYMENT_RATE_CODE = "03"
+# BLS LAUS measure codes we pull, mapped to output column names.
+#   03 = unemployment rate (percent)
+#   04 = unemployment level (count)
+#   06 = labor force level (count)
+MEASURE_CODES = {
+    "03": "unemployment_rate",
+    "04": "unemployment_level",
+    "06": "labor_force_level",
+}
 
 # M13 = annual average in BLS period codes
 ANNUAL_PERIOD = "M13"
@@ -49,7 +56,7 @@ def _download_if_missing(filename: str, dest_dir: Path) -> Path:
 
 
 def _parse_series(series_path: Path) -> pd.DataFrame:
-    """Return mapping of series_id → state_fips, county_fips for unemployment rate."""
+    """Return mapping of series_id → state_fips, county_fips, measure_code."""
     series = pd.read_csv(
         series_path,
         sep="\t",
@@ -67,7 +74,7 @@ def _parse_series(series_path: Path) -> pd.DataFrame:
     # County-level rows: area_type_code == 'F' (county and equivalent)
     county = series[
         (series["area_type_code"] == "F")
-        & (series["measure_code"] == UNEMPLOYMENT_RATE_CODE)
+        & (series["measure_code"].isin(MEASURE_CODES))
     ].copy()
 
     # area_code format: 'CN' + state_fips(2) + county_fips(3) + padding
@@ -75,7 +82,7 @@ def _parse_series(series_path: Path) -> pd.DataFrame:
     county["county_fips"] = county["area_code"].str[4:7]
     county["county_fips_full"] = county["state_fips"] + county["county_fips"]
 
-    return county[["series_id", "state_fips", "county_fips", "county_fips_full"]]
+    return county[["series_id", "state_fips", "county_fips", "county_fips_full", "measure_code"]]
 
 
 def ingest_bls_laus() -> None:
@@ -119,12 +126,33 @@ def ingest_bls_laus() -> None:
     print("Data merged.")
 
     data["year"] = data["year"].astype(int)
-    data["unemployment_rate"] = pd.to_numeric(data["value"], errors="coerce")
-    data = data[data["unemployment_rate"].notna()]
+    data["value"] = pd.to_numeric(data["value"], errors="coerce")
+    data = data[data["value"].notna()]
 
-    out = data.rename(
+    data = data.rename(
         columns={"county_fips_full": "county_fips", "county_fips": "county_fips_within_state"}
-    )[["county_fips", "state_fips", "county_fips_within_state", "year", "unemployment_rate"]]
+    )
+
+    # Pivot measure_code (03/04/06) out into separate columns so each
+    # county-year row carries unemployment_rate, unemployment_level, and
+    # labor_force_level side by side.
+    pivoted = data.pivot_table(
+        index=["county_fips", "state_fips", "county_fips_within_state", "year"],
+        columns="measure_code",
+        values="value",
+        aggfunc="first",
+    ).reset_index()
+    pivoted = pivoted.rename(columns=MEASURE_CODES)
+    pivoted.columns.name = None
+
+    for col in MEASURE_CODES.values():
+        if col not in pivoted.columns:
+            pivoted[col] = None
+
+    out = pivoted[
+        ["county_fips", "state_fips", "county_fips_within_state", "year"]
+        + list(MEASURE_CODES.values())
+    ]
 
     row_count = write_raw_table(out, "bls_laus")
     print(f"raw.bls_laus: {row_count:,} rows loaded")

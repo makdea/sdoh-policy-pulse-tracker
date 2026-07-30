@@ -58,9 +58,13 @@ VARIABLE_MAP = {
     "total_population": ["ACS_TOT_POP_WT"],
     # Healthcare access — nearest trauma center (POS file, county-level)
     "dist_trauma_center_miles": ["POS_MEDIAN_DIST_TRAUMA"],
+    # Maternal care access — nearest obstetrics facility (POS file, county-level)
+    "dist_obstetrics_miles": ["POS_MEDIAN_DIST_OBSTETRICS"],
     # Physicians: rate per 100k (AHRF_MDS_RATE) and raw count (AHRF_TOT_MDS)
     "mds_rate_per_100k": ["AHRF_MDS_RATE"],
     "total_mds": ["AHRF_TOT_MDS"],
+    # Primary-care Health Professional Shortage Area flag (AHRF file)
+    "hpsa_primary_care": ["AHRF_HPSA_PRIM"],
     # Rural-urban classification (2013 and 2023 vintages both included in CLH)
     "rural_urban_code_2013": ["AHRF_USDA_RUCC_2013"],
     "rural_urban_code_2023": ["AHRF_USDA_RUCC_2023"],
@@ -107,8 +111,8 @@ def _load_file(path: Path) -> pd.DataFrame | None:
     numeric_cols = [
         "pct_uninsured_under65", "median_hh_income", "pct_below_poverty",
         "pct_unemployed", "pct_hs_graduate", "pct_bachelors",
-        "total_population", "dist_trauma_center_miles",
-        "mds_rate_per_100k", "total_mds",
+        "total_population", "dist_trauma_center_miles", "dist_obstetrics_miles",
+        "mds_rate_per_100k", "total_mds", "hpsa_primary_care",
         "rural_urban_code_2013", "rural_urban_code_2023",
     ]
     for col in numeric_cols:
