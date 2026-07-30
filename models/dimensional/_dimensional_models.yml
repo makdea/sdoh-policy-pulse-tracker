@@ -137,8 +137,10 @@ models:
         joins:
           - join: dim_county
             sql_on: "${fct_county_year_sdoh.county_fips} = ${dim_county.county_fips}"
+            relationship: many-to-one
           - join: dim_year
             sql_on: "${fct_county_year_sdoh.year} = ${dim_year.year}"
+            relationship: many-to-one
     columns:
       - name: county_year_key
         data_type: string
