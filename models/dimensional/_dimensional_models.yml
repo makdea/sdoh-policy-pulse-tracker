@@ -18,6 +18,9 @@ models:
         data_tests:
           - not_null
           - unique
+        config:
+          meta:
+            primary_key: true
 
       - name: county_name
         data_type: string
@@ -90,6 +93,9 @@ models:
         data_tests:
           - not_null
           - unique
+        config:
+          meta:
+            primary_key: true
 
       - name: era_name
         data_type: string
@@ -150,6 +156,9 @@ models:
         data_tests:
           - not_null
           - unique
+        config:
+          meta:
+            primary_key: true
 
       - name: county_fips
         data_type: string
