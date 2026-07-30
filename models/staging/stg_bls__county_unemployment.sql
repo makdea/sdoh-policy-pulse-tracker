@@ -14,7 +14,9 @@ cleaned as (
         lpad(cast(county_fips as string), 5, '0')  as county_fips,
         lpad(cast(state_fips  as string), 2, '0')  as state_fips,
         cast(year as int64)                        as year,
-        cast(unemployment_rate as float64)         as unemployment_rate
+        cast(unemployment_rate as float64)         as unemployment_rate,
+        cast(unemployment_level as float64)        as unemployment_level,
+        cast(labor_force_level as float64)         as labor_force_level
 
     from source
     where county_fips is not null
@@ -32,5 +34,7 @@ select
     county_fips,
     state_fips,
     year,
-    unemployment_rate
+    unemployment_rate,
+    unemployment_level,
+    labor_force_level
 from cleaned

@@ -117,6 +117,18 @@ models:
                 min_value: 0
                 max_value: 60
 
+      - name: unemployment_level
+        data_type: float64
+        description: >
+          Annual average count of unemployed persons (BLS measure code 04).
+          Numerator for a population-weighted unemployment rate.
+
+      - name: labor_force_level
+        data_type: float64
+        description: >
+          Annual average labor force count (BLS measure code 06).
+          Denominator for a population-weighted unemployment rate.
+
   - name: stg_acs__county_poverty
     description: >
       Cleaned ACS 5-year estimates covering county-level poverty, income,
@@ -185,11 +197,43 @@ models:
           Share of the relevant adult population with a high school
           diploma or higher (0–1 scale).
 
+      - name: edu_bachelors
+        data_type: float64
+        description: >
+          Estimated count of adults with a bachelor's degree or higher.
+          Numerator for a population-weighted bachelor's-attainment ratio
+          metric, paired with edu_universe.
+
+      - name: edu_hs_diploma
+        data_type: float64
+        description: >
+          Estimated count of adults with a high school diploma or
+          equivalent as their highest credential.
+
+      - name: edu_universe
+        data_type: float64
+        description: >
+          Population universe for educational attainment estimates.
+          Denominator for the weighted education ratio metrics.
+
       - name: pct_severe_rent_burden
         data_type: float64
         description: >
           Share of renter households spending 50%+ of income on rent
           (0–1 scale).
+
+      - name: renters_severe_burden
+        data_type: float64
+        description: >
+          Estimated number of renter households spending 50%+ of income on
+          rent. Numerator for a population-weighted rent-burden ratio
+          metric, paired with renters_total.
+
+      - name: renters_total
+        data_type: float64
+        description: >
+          Estimated total number of renter-occupied housing units.
+          Denominator for the weighted rent-burden ratio metric.
 
   - name: stg_ahrq__county_health
     description: >
@@ -227,9 +271,35 @@ models:
         data_type: float64
         description: Distance from the county centroid to the nearest trauma center, in miles.
 
+      - name: dist_obstetrics_miles
+        data_type: float64
+        description: >
+          Distance from the county centroid to the nearest facility offering
+          obstetric care, in miles. Maternal care access indicator.
+
       - name: mds_rate_per_100k
         data_type: float64
         description: Rate of physicians (MDs) per 100,000 population.
+
+      - name: total_mds
+        data_type: float64
+        description: >
+          Total count of physicians (MDs) in the county. Numerator for a
+          population-weighted physician-rate ratio metric, paired with
+          total_population.
+
+      - name: total_population
+        data_type: float64
+        description: >
+          Total county population (AHRQ ACS_TOT_POP_WT). Denominator for the
+          population-weighted physician-rate ratio metric.
+
+      - name: hpsa_primary_care
+        data_type: int64
+        description: >
+          Primary-care Health Professional Shortage Area (HPSA) designation
+          code: 0 = not a shortage area, 1 = whole-county HPSA, 2 =
+          partial-county HPSA.
 
       - name: rural_urban_code_2013
         data_type: int64

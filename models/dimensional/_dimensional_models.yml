@@ -1,0 +1,358 @@
+version: 2
+
+models:
+  - name: dim_county
+    description: >
+      County dimension, grain = county_fips. Flattened (not snowflaked):
+      state attributes (state_name, state_abbr, census_region,
+      census_division), Medicaid expansion status, and rurality are all
+      included directly so a Lightdash user never needs more than one join
+      to get geography + expansion context. Built from
+      stg_sahie__county_uninsured (geography) + state_fips_lookup +
+      medicaid_expansion_status seeds + the latest AHRQ rurality
+      classification per county.
+    columns:
+      - name: county_fips
+        data_type: string
+        description: 5-digit county FIPS code. Primary key of this dimension.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: county_name
+        data_type: string
+        description: County name as reported by SAHIE.
+
+      - name: state_fips
+        data_type: string
+        description: 2-digit state FIPS code.
+        data_tests:
+          - not_null
+
+      - name: state_name
+        data_type: string
+        description: Full state name, joined from the state_fips_lookup seed.
+
+      - name: state_abbr
+        data_type: string
+        description: 2-letter state postal abbreviation.
+
+      - name: census_region
+        data_type: string
+        description: Census Bureau region (Northeast, Midwest, South, West).
+
+      - name: census_division
+        data_type: string
+        description: Census Bureau division (e.g. East South Central, Pacific).
+
+      - name: expansion_status
+        data_type: string
+        description: State-level Medicaid expansion status ('expanded' or 'not_expanded').
+
+      - name: expansion_year
+        data_type: int64
+        description: >
+          Calendar year the state adopted ACA Medicaid expansion. Null for
+          non-expansion states. Basis for the years_since_expansion /
+          expansion_phase custom dimensions defined in Lightdash.
+
+      - name: is_expansion_state
+        data_type: bool
+        description: >
+          Boolean treatment indicator: true for Medicaid expansion states,
+          false otherwise.
+        data_tests:
+          - not_null
+
+      - name: rural_urban_code_2013
+        data_type: int64
+        description: >
+          USDA 2013 Rural-Urban Continuum Code (RUCC), most recent AHRQ
+          value on file for the county. Null without AHRQ files loaded.
+
+      - name: is_rural
+        data_type: bool
+        description: >
+          Boolean rurality flag derived from rural_urban_code_2013. Null
+          without AHRQ files loaded.
+
+  - name: dim_year
+    description: >
+      Year dimension, grain = year. One row per calendar year in the study
+      window (2017-2025) with era_name, president, era_color_hex, and
+      policy_event_label -- lifted out of what was previously the
+      policy_events CTE + policy_eras seed join inside
+      int_policy_era_assignments.sql.
+    columns:
+      - name: year
+        data_type: int64
+        description: Calendar year. Primary key of this dimension.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: era_name
+        data_type: string
+        description: >
+          Political era label the year falls into, from the policy_eras
+          seed. One of Trump1 (2017-2020), Biden (2021-2024), or Trump2
+          (2025+).
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['Trump1', 'Biden', 'Trump2']
+              config:
+                where: "era_name is not null"
+
+      - name: president
+        data_type: string
+        description: President in office during era_name, from the policy_eras seed.
+
+      - name: era_color_hex
+        data_type: string
+        description: >
+          Hex color code assigned to era_name for consistent chart styling,
+          from the policy_eras seed.
+
+      - name: policy_event_label
+        data_type: string
+        description: >
+          Free-text label for a significant federal policy change that
+          occurred in this calendar year (e.g. ACA mandate repeal, Medicaid
+          unwinding). Null for years with no flagged event.
+
+  - name: fct_county_year_sdoh
+    description: >
+      Fact table, grain = (county_fips, year). FKs to dim_county and
+      dim_year. Carries raw counts/numerators/denominators wherever a
+      source provides a count pair, deliberately not the pre-computed
+      rates -- every rate is built as a properly-weighted Lightdash ratio
+      metric (SUM(numerator)/SUM(denominator)) instead of a naive
+      mean-of-counties average. Columns with no natural numerator
+      (median_household_income, dist_trauma_center_miles,
+      dist_obstetrics_miles, hpsa_primary_care) are kept as direct
+      measures.
+    config:
+      meta:
+        joins:
+          - join: dim_county
+            sql_on: "${fct_county_year_sdoh.county_fips} = ${dim_county.county_fips}"
+          - join: dim_year
+            sql_on: "${fct_county_year_sdoh.year} = ${dim_year.year}"
+    columns:
+      - name: county_year_key
+        data_type: string
+        description: >
+          Surrogate key hashed from (county_fips, year). Primary key of
+          this model.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: county_fips
+        data_type: string
+        description: 5-digit county FIPS code. FK to dim_county.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_county')
+                field: county_fips
+
+      - name: year
+        data_type: int64
+        description: Calendar year of the observation. FK to dim_year.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_year')
+                field: year
+
+      - name: n_uninsured
+        data_type: float64
+        description: >
+          Estimated count of uninsured people (SAHIE). Numerator for the
+          weighted uninsurance ratio metric.
+
+      - name: n_insured
+        data_type: float64
+        description: Estimated count of insured people (SAHIE).
+
+      - name: sahie_total_population
+        data_type: float64
+        description: >
+          Derived total population (n_uninsured + n_insured). Denominator
+          for the weighted uninsurance ratio metric.
+        config:
+          meta:
+            metrics:
+              weighted_avg_pct_uninsured:
+                type: number
+                sql: "SUM(${TABLE}.n_uninsured) / SUM(${TABLE}.sahie_total_population)"
+                label: "% Uninsured (population-weighted)"
+                format: percent
+                description: >
+                  Total uninsured people divided by total population,
+                  across whatever slice is selected -- correct regardless
+                  of county size, unlike a naive average of per-county
+                  rates.
+
+      - name: unemployment_level
+        data_type: float64
+        description: >
+          Annual average count of unemployed persons (BLS). Numerator for
+          the weighted unemployment ratio metric.
+
+      - name: labor_force_level
+        data_type: float64
+        description: >
+          Annual average labor force count (BLS). Denominator for the
+          weighted unemployment ratio metric.
+        config:
+          meta:
+            metrics:
+              weighted_avg_unemployment_rate:
+                type: number
+                sql: "SUM(${TABLE}.unemployment_level) / SUM(${TABLE}.labor_force_level)"
+                label: "Unemployment Rate (labor-force-weighted)"
+                format: percent
+
+      - name: n_below_poverty
+        data_type: float64
+        description: >
+          Estimated count of people with income below the poverty line
+          (ACS). Numerator for the weighted poverty ratio metric.
+
+      - name: poverty_universe
+        data_type: float64
+        description: >
+          Population universe for whom poverty status is determined
+          (ACS). Denominator for the weighted poverty ratio metric.
+        config:
+          meta:
+            metrics:
+              weighted_avg_poverty_rate:
+                type: number
+                sql: "SUM(${TABLE}.n_below_poverty) / SUM(${TABLE}.poverty_universe)"
+                label: "Poverty Rate (population-weighted)"
+                format: percent
+
+      - name: edu_bachelors
+        data_type: float64
+        description: >
+          Estimated count of adults with a bachelor's degree or higher
+          (ACS). Numerator for the weighted bachelor's-attainment ratio
+          metric.
+
+      - name: edu_hs_diploma
+        data_type: float64
+        description: >
+          Estimated count of adults with a high school diploma or
+          equivalent as their highest credential (ACS).
+
+      - name: edu_universe
+        data_type: float64
+        description: >
+          Population universe for educational attainment estimates (ACS).
+          Denominator for the weighted education ratio metrics.
+        config:
+          meta:
+            metrics:
+              weighted_avg_pct_bachelors_plus:
+                type: number
+                sql: "SUM(${TABLE}.edu_bachelors) / SUM(${TABLE}.edu_universe)"
+                label: "% Bachelor's+ (population-weighted)"
+                format: percent
+              weighted_avg_pct_hs_plus:
+                type: number
+                sql: "SUM(${TABLE}.edu_hs_diploma + ${TABLE}.edu_bachelors) / SUM(${TABLE}.edu_universe)"
+                label: "% HS Diploma+ (population-weighted)"
+                format: percent
+
+      - name: renters_severe_burden
+        data_type: float64
+        description: >
+          Estimated number of renter households spending 50%+ of income on
+          rent (ACS). Numerator for the weighted rent-burden ratio metric.
+
+      - name: renters_total
+        data_type: float64
+        description: >
+          Estimated total number of renter-occupied housing units (ACS).
+          Denominator for the weighted rent-burden ratio metric.
+        config:
+          meta:
+            metrics:
+              weighted_avg_pct_severe_rent_burden:
+                type: number
+                sql: "SUM(${TABLE}.renters_severe_burden) / SUM(${TABLE}.renters_total)"
+                label: "% Severe Rent Burden (population-weighted)"
+                format: percent
+
+      - name: median_household_income
+        data_type: float64
+        description: >
+          Median household income in dollars (ACS). No natural
+          numerator/denominator pair -- kept as a direct measure.
+        config:
+          meta:
+            metrics:
+              avg_median_household_income:
+                type: average
+                label: "Avg Median HH Income"
+                format: usd
+
+      - name: total_mds
+        data_type: float64
+        description: >
+          Total count of physicians (MDs) in the county (AHRQ). Numerator
+          for the weighted physician-rate ratio metric.
+
+      - name: total_population
+        data_type: float64
+        description: >
+          Total county population (AHRQ). Denominator for the weighted
+          physician-rate ratio metric.
+        config:
+          meta:
+            metrics:
+              weighted_avg_mds_rate_per_100k:
+                type: number
+                sql: "SUM(${TABLE}.total_mds) / SUM(${TABLE}.total_population) * 100000"
+                label: "Physicians per 100k (population-weighted)"
+
+      - name: dist_trauma_center_miles
+        data_type: float64
+        description: >
+          Distance from the county centroid to the nearest trauma center,
+          in miles (AHRQ). No natural numerator/denominator pair -- kept as
+          a direct measure. Null without AHRQ files loaded.
+        config:
+          meta:
+            metrics:
+              avg_dist_trauma_center_miles:
+                type: average
+                label: "Avg Distance to Trauma Center (mi)"
+
+      - name: dist_obstetrics_miles
+        data_type: float64
+        description: >
+          Distance from the county centroid to the nearest facility
+          offering obstetric care, in miles (AHRQ). Maternal care access
+          indicator; no natural numerator/denominator pair. Null without
+          AHRQ files loaded.
+        config:
+          meta:
+            metrics:
+              avg_dist_obstetrics_miles:
+                type: average
+                label: "Avg Distance to Obstetric Care (mi)"
+
+      - name: hpsa_primary_care
+        data_type: int64
+        description: >
+          Primary-care Health Professional Shortage Area (HPSA) designation
+          code (AHRF): 0 = not a shortage area, 1 = whole-county HPSA, 2 =
+          partial-county HPSA. No natural numerator/denominator pair. Null
+          without AHRQ files loaded.

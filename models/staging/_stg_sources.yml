@@ -53,8 +53,9 @@ sources:
             description: "Estimate year."
 
       - name: bls_laus
-        description: "BLS LAUS annual-average county unemployment rates, 2016–2024.
-          Derived from la.data.64.County bulk file (measure code 04).
+        description: "BLS LAUS annual-average county unemployment measures, 2016–2024.
+          Derived from la.data.64.County bulk file, pivoted on measure code
+          (03 = rate, 04 = level, 06 = labor force level).
           Cleaned by stg_bls__county_unemployment."
         columns:
           - name: county_fips
@@ -71,7 +72,16 @@ sources:
             description: "Calendar year of the annual-average estimate."
           - name: unemployment_rate
             data_type: float64
-            description: "Annual average unemployment rate (percent, 0–100 scale)."
+            description: "Annual average unemployment rate (percent, 0–100 scale). Measure code 03."
+          - name: unemployment_level
+            data_type: float64
+            description: "Annual average count of unemployed persons. Measure code 04.
+              Numerator for a population-weighted unemployment rate
+              (SUM(unemployment_level)/SUM(labor_force_level))."
+          - name: labor_force_level
+            data_type: float64
+            description: "Annual average labor force count. Measure code 06.
+              Denominator for a population-weighted unemployment rate."
 
       - name: acs_poverty
         description: "ACS 5-year estimates: poverty, income, education, housing burden.
@@ -186,20 +196,31 @@ sources:
               reported by AHRQ. Not currently used downstream."
           - name: total_population
             data_type: float64
-            description: "Total county population, as reported by AHRQ. Not
-              currently used downstream."
+            description: "Total county population (ACS_TOT_POP_WT), as reported by
+              AHRQ. Denominator for the physician-rate ratio metric
+              (total_mds / total_population)."
           - name: dist_trauma_center_miles
             data_type: float64
             description: "Distance from the county centroid to the nearest trauma
               center, in miles."
+          - name: dist_obstetrics_miles
+            data_type: float64
+            description: "Distance from the county centroid to the nearest facility
+              offering obstetric care, in miles (POS_MEDIAN_DIST_OBSTETRICS).
+              Maternal care access indicator."
           - name: mds_rate_per_100k
             data_type: float64
             description: "Rate of physicians (MDs) per 100,000 population."
           - name: total_mds
             data_type: float64
-            description: "Total count of physicians (MDs) in the county. Not
-              currently used downstream — mds_rate_per_100k is the
-              population-normalized figure used in the marts."
+            description: "Total count of physicians (MDs) in the county. Numerator
+              for a population-weighted physician-rate ratio metric, paired
+              with total_population."
+          - name: hpsa_primary_care
+            data_type: float64
+            description: "Primary-care Health Professional Shortage Area (HPSA)
+              designation code (AHRF_HPSA_PRIM): 0 = not a shortage area,
+              1 = whole-county HPSA, 2 = partial-county HPSA."
           - name: rural_urban_code_2013
             data_type: float64
             description: "USDA 2013 Rural-Urban Continuum Code (RUCC). 1–3 = metro,

@@ -7,29 +7,31 @@ Usage:
 """
 
 import os
-import duckdb
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import dash_bootstrap_components as dbc
 from dash import Dash, dcc, html, Input, Output
+from dotenv import load_dotenv
+from google.cloud import bigquery
+
+load_dotenv()
 
 # ---------------------------------------------------------------------------
 # Database connection
 # ---------------------------------------------------------------------------
 
-DB_PATH = os.environ.get("DUCKDB_PATH", "data/sdoh_pulse.duckdb")
+GCP_PROJECT = os.environ["GCP_PROJECT"]
 COUNTIES_GEOJSON = (
     "https://raw.githubusercontent.com/plotly/datasets/master/"
     "geojson-counties-fips.json"
 )
 
+_client = bigquery.Client(project=GCP_PROJECT)
+
 
 def query(sql: str) -> pd.DataFrame:
-    conn = duckdb.connect(DB_PATH, read_only=True)
-    df = conn.execute(sql).df()
-    conn.close()
-    return df
+    return _client.query(sql).to_dataframe()
 
 
 # ---------------------------------------------------------------------------
@@ -37,35 +39,31 @@ def query(sql: str) -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 
 def load_trends() -> pd.DataFrame:
-    return query("""
+    # Each row here is a single (county, year) observation, so a rate is
+    # just numerator/denominator -- no cross-county weighting is involved
+    # at this grain (that only matters once rows get aggregated, e.g. for
+    # an era- or region-level rollup, which is now Lightdash's job).
+    return query(f"""
         SELECT
-            county_fips, county_name, state_abbr, state_name,
-            census_region, is_expansion_state, expansion_status,
-            year, era_name, era_color_hex,
-            pct_uninsured, unemployment_rate, poverty_rate,
-            median_household_income, pct_bachelors_plus,
-            pct_severe_rent_burden, policy_event_label
-        FROM marts.mart_county_sdoh_trends
-        ORDER BY county_fips, year
+            fct.county_fips, dim_county.county_name, dim_county.state_abbr,
+            dim_county.state_name, dim_county.census_region,
+            dim_county.is_expansion_state, dim_county.expansion_status,
+            fct.year, dim_year.era_name, dim_year.era_color_hex,
+            SAFE_DIVIDE(fct.n_uninsured, fct.sahie_total_population)        AS pct_uninsured,
+            SAFE_DIVIDE(fct.unemployment_level, fct.labor_force_level)      AS unemployment_rate,
+            SAFE_DIVIDE(fct.n_below_poverty, fct.poverty_universe)         AS poverty_rate,
+            fct.median_household_income,
+            SAFE_DIVIDE(fct.edu_bachelors, fct.edu_universe)               AS pct_bachelors_plus,
+            SAFE_DIVIDE(fct.renters_severe_burden, fct.renters_total)      AS pct_severe_rent_burden,
+            dim_year.policy_event_label
+        FROM `{GCP_PROJECT}.dimensional.fct_county_year_sdoh` fct
+        JOIN `{GCP_PROJECT}.dimensional.dim_county` dim_county ON fct.county_fips = dim_county.county_fips
+        JOIN `{GCP_PROJECT}.dimensional.dim_year` dim_year ON fct.year = dim_year.year
+        ORDER BY fct.county_fips, fct.year
     """)
-
-
-def load_era_comparisons() -> pd.DataFrame:
-    return query("""
-        SELECT *
-        FROM marts.mart_era_comparisons
-        WHERE census_region IS NOT NULL
-        ORDER BY era_sort_order, is_expansion_state DESC
-    """)
-
-
-def load_did() -> pd.DataFrame:
-    return query("SELECT * FROM marts.mart_diff_in_diff")
 
 
 trends_df = load_trends()
-era_df    = load_era_comparisons()
-did_df    = load_did()
 
 available_years = sorted(trends_df["year"].dropna().unique().tolist())
 
@@ -84,7 +82,7 @@ METRIC_OPTIONS = [
 
 METRIC_LABELS = {o["value"]: o["label"] for o in METRIC_OPTIONS}
 
-PCT_METRICS = {"pct_uninsured", "poverty_rate", "pct_bachelors_plus", "pct_severe_rent_burden"}
+PCT_METRICS = {"pct_uninsured", "unemployment_rate", "poverty_rate", "pct_bachelors_plus", "pct_severe_rent_burden"}
 
 ERA_ORDER    = ["Trump1", "Biden", "Trump2"]
 ERA_COLORS   = {"Trump1": "#e31a1c", "Biden": "#1f78b4", "Trump2": "#fc8d59"}
@@ -370,6 +368,4 @@ def update_choropleth(year: int, metric: str) -> go.Figure:
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    from dotenv import load_dotenv
-    load_dotenv()
     app.run(debug=True, port=8050)

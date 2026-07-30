@@ -27,9 +27,14 @@ cleaned as (
         -- Education
         cast(pct_bachelors_plus as float64)                 as pct_bachelors_plus,
         cast(pct_hs_plus as float64)                        as pct_hs_plus,
+        cast(edu_bachelors as float64)                      as edu_bachelors,
+        cast(edu_hs_diploma as float64)                     as edu_hs_diploma,
+        cast(edu_universe as float64)                       as edu_universe,
 
         -- Housing cost burden
-        cast(pct_severe_rent_burden as float64)             as pct_severe_rent_burden
+        cast(pct_severe_rent_burden as float64)             as pct_severe_rent_burden,
+        cast(renters_severe_burden as float64)              as renters_severe_burden,
+        cast(renters_total as float64)                      as renters_total
 
     from source
     where county_fips is not null
@@ -51,5 +56,10 @@ select
     poverty_universe,
     pct_bachelors_plus,
     pct_hs_plus,
-    pct_severe_rent_burden
+    edu_bachelors,
+    edu_hs_diploma,
+    edu_universe,
+    pct_severe_rent_burden,
+    renters_severe_burden,
+    renters_total
 from cleaned

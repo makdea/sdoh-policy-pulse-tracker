@@ -2,6 +2,7 @@
 dbt-core>=1.7.0
 dbt-bigquery>=1.7.0
 google-cloud-bigquery>=3.17.0
+db-dtypes>=1.2.0
 
 # data ingestion
 pandas>=2.1.0

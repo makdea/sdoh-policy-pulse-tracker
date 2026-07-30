@@ -31,7 +31,11 @@ with source as (
             cast(null as int64)   as year,
             cast(null as float64) as pct_uninsured_under65,
             cast(null as float64) as dist_trauma_center_miles,
+            cast(null as float64) as dist_obstetrics_miles,
             cast(null as float64) as mds_rate_per_100k,
+            cast(null as float64) as total_mds,
+            cast(null as float64) as total_population,
+            cast(null as int64)   as hpsa_primary_care,
             cast(null as int64)   as rural_urban_code_2013
         where 1 = 0
     {% endif %}
@@ -43,7 +47,11 @@ cleaned as (
         cast(year as int64)                             as year,
         cast(pct_uninsured_under65    as float64)       as pct_uninsured_under65,
         cast(dist_trauma_center_miles as float64)       as dist_trauma_center_miles,
+        cast(dist_obstetrics_miles    as float64)       as dist_obstetrics_miles,
         cast(mds_rate_per_100k        as float64)       as mds_rate_per_100k,
+        cast(total_mds                as float64)       as total_mds,
+        cast(total_population         as float64)       as total_population,
+        cast(hpsa_primary_care        as int64)         as hpsa_primary_care,
         cast(rural_urban_code_2013    as int64)         as rural_urban_code_2013,
 
         -- Rural flag: RUCC 4–9 = non-metro (USDA classification)
@@ -66,7 +74,11 @@ select
     year,
     pct_uninsured_under65,
     dist_trauma_center_miles,
+    dist_obstetrics_miles,
     mds_rate_per_100k,
+    total_mds,
+    total_population,
+    hpsa_primary_care,
     rural_urban_code_2013,
     is_rural
 from cleaned
